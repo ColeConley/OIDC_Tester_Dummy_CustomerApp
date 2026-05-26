@@ -255,10 +255,10 @@
           </div>
 
           <div class="card" id="manualCodeCard" style="display:none;">
-            <div class="card-header"><div class="card-title">Manual Code Entry</div></div>
-            <div class="form-group">
+<div class="form-group">
               <label class="form-label">Authorization Code</label>
               <input class="form-input text-mono" id="manualCode" placeholder="paste code from redirect">
+              <div class="form-hint">Only needed if auto-processing failed. The code is the <code style="font-family:var(--mono)">code=</code> value from the redirect URL.</div>
             </div>
             <button class="btn btn-success btn-sm" onclick="exchangeCodeManual()">Exchange Code →</button>
           </div>
@@ -320,10 +320,9 @@
           <div class="card" id="flowRequestCard" style="display:none;">
             <div class="card-header"><div class="card-title">Authorization Request URL</div></div>
             <div class="code-block" id="flowRequestUrl" style="font-size:10px;"></div>
-            <div style="margin-top:10px;">
-              <button class="btn btn-ghost btn-sm" onclick="copyFlowUrl()">Copy URL</button>
-              <span class="text-sm text-muted" style="margin-left:8px;" id="flowOpenNote">
-                Browser popup may be blocked. Copy URL and open manually, then paste code above.
+<span class="text-sm text-muted" style="margin-left:8px;" id="flowOpenNote">
+                Redirecting to IDP in a moment… or copy the URL to navigate manually.
+              </span>
               </span>
             </div>
           </div>
