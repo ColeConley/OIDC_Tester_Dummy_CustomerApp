@@ -1,668 +1,19 @@
+<!-- Author Cole Conley -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OIDC Federation Tester — SP Portal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #0f1218;
-    --surface2: #161b24;
-    --surface3: #1e2530;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.13);
-    --text: #e8edf5;
-    --muted: #6b7a94;
-    --accent: #3b82f6;
-    --accent2: #60a5fa;
-    --accent-dim: rgba(59,130,246,0.12);
-    --accent-glow: rgba(59,130,246,0.25);
-    --green: #22c55e;
-    --green-dim: rgba(34,197,94,0.1);
-    --red: #ef4444;
-    --red-dim: rgba(239,68,68,0.1);
-    --amber: #f59e0b;
-    --amber-dim: rgba(245,158,11,0.1);
-    --purple: #a855f7;
-    --purple-dim: rgba(168,85,247,0.1);
-    --radius: 8px;
-    --radius-lg: 12px;
-    --mono: 'IBM Plex Mono', monospace;
-    --display: 'Syne', sans-serif;
-    --body: 'DM Sans', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--body);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* ---- GRID LAYOUT ---- */
-  .app { display: flex; min-height: 100vh; }
-
-  .sidebar {
-    width: 240px;
-    min-height: 100vh;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-  }
-
-  .main {
-    margin-left: 240px;
-    flex: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ---- SIDEBAR ---- */
-  .sidebar-logo {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .logo-mark {
-    font-family: var(--display);
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    color: var(--accent2);
-  }
-  .logo-sub {
-    font-size: 10px;
-    font-family: var(--mono);
-    color: var(--muted);
-    margin-top: 2px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .nav-section {
-    padding: 12px 12px 4px;
-  }
-  .nav-label {
-    font-size: 9px;
-    font-family: var(--mono);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0 8px;
-    margin-bottom: 4px;
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 10px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--muted);
-    transition: all 0.15s;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    position: relative;
-  }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: var(--accent-dim); color: var(--accent2); }
-  .nav-item .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
-    flex-shrink: 0;
-  }
-  .nav-item.active .dot { background: var(--accent); }
-  .nav-badge {
-    margin-left: auto;
-    font-size: 10px;
-    font-family: var(--mono);
-    background: var(--accent-dim);
-    color: var(--accent2);
-    padding: 1px 6px;
-    border-radius: 20px;
-    border: 1px solid var(--accent-glow);
-  }
-
-  .sidebar-bottom {
-    margin-top: auto;
-    padding: 12px;
-    border-top: 1px solid var(--border);
-  }
-  .session-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: var(--radius);
-    background: var(--surface2);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .session-pill:hover { background: var(--surface3); }
-  .avatar-sm {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-glow);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 600;
-    color: var(--accent2);
-    flex-shrink: 0;
-  }
-  .session-info { flex: 1; min-width: 0; }
-  .session-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .session-role { font-size: 10px; color: var(--muted); }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 6px var(--green); }
-
-  /* ---- PAGES ---- */
-  .page { display: none; flex: 1; }
-  .page.active { display: flex; flex-direction: column; }
-
-  /* ---- TOPBAR ---- */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky; top: 0; z-index: 50;
-  }
-  .topbar-title {
-    font-family: var(--display);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .topbar-subtitle { font-size: 12px; color: var(--muted); margin-top: 1px; }
-  .topbar-actions { display: flex; gap: 8px; align-items: center; }
-
-  /* ---- BUTTONS ---- */
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px;
-    border-radius: var(--radius);
-    font-size: 13px; font-weight: 500;
-    font-family: var(--body);
-    cursor: pointer; border: none;
-    transition: all 0.15s;
-    text-decoration: none;
-  }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
-  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
-  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-  .btn-danger:hover { background: rgba(239,68,68,0.2); }
-  .btn-success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .btn-success:hover { background: rgba(34,197,94,0.2); }
-  .btn-sm { padding: 4px 10px; font-size: 12px; }
-  .btn-lg { padding: 12px 24px; font-size: 15px; }
-  .btn-xl { padding: 16px 32px; font-size: 16px; border-radius: var(--radius-lg); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-
-  /* ---- CARDS ---- */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-  }
-  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .card-title { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: var(--text); }
-  .card-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  /* ---- FORMS ---- */
-  .form-group { margin-bottom: 14px; }
-  .form-label {
-    display: block;
-    font-size: 11px;
-    font-family: var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--muted);
-    margin-bottom: 5px;
-  }
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 8px 12px;
-    font-size: 13px;
-    color: var(--text);
-    font-family: var(--body);
-    transition: border-color 0.15s;
-    outline: none;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-  .form-input::placeholder { color: var(--muted); }
-  .form-select { cursor: pointer; }
-  .form-textarea { resize: vertical; min-height: 80px; font-family: var(--mono); font-size: 12px; }
-  .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  /* ---- BADGES ---- */
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 11px; font-weight: 500;
-    font-family: var(--mono);
-  }
-  .badge-blue { background: var(--accent-dim); color: var(--accent2); border: 1px solid var(--accent-glow); }
-  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-  .badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
-  .badge-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
-  .badge-gray { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
-
-  /* ---- CODE BLOCK ---- */
-  .code-block {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.7;
-    color: #a8b8d8;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 280px;
-    overflow-y: auto;
-  }
-  .code-block .k { color: var(--accent2); }
-  .code-block .s { color: var(--green); }
-  .code-block .n { color: var(--amber); }
-
-  /* ---- TABLES ---- */
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .data-table th {
-    text-align: left;
-    font-size: 10px;
-    font-family: var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    font-weight: 400;
-  }
-  .data-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    vertical-align: middle;
-  }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr:hover td { background: var(--surface2); }
-
-  /* ---- STEP FLOW ---- */
-  .flow-steps { display: flex; flex-direction: column; gap: 8px; }
-  .flow-step {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    transition: all 0.2s;
-  }
-  .flow-step.done { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
-  .flow-step.active { border-color: var(--accent-glow); background: var(--accent-dim); }
-  .flow-step.error { border-color: rgba(239,68,68,0.3); background: var(--red-dim); }
-  .step-icon {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    flex-shrink: 0;
-    font-family: var(--mono);
-  }
-  .step-icon.pending { background: var(--surface3); color: var(--muted); border: 1px solid var(--border2); }
-  .step-icon.done { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.4); }
-  .step-icon.active { background: var(--accent-dim); color: var(--accent2); border: 1px solid var(--accent-glow); }
-  .step-icon.error { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
-  .step-body { flex: 1; min-width: 0; }
-  .step-name { font-size: 13px; font-weight: 500; color: var(--text); }
-  .step-detail { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; word-break: break-all; }
-  .step-detail.ok { color: var(--green); }
-  .step-detail.err { color: var(--red); }
-
-  /* ---- ALERT ---- */
-  .alert {
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    display: flex; align-items: flex-start; gap: 8px;
-  }
-  .alert-info { background: var(--accent-dim); color: var(--accent2); border: 1px solid var(--accent-glow); }
-  .alert-success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .alert-error { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-  .alert-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
-
-  /* ---- TABS ---- */
-  .tabs { display: flex; gap: 2px; padding: 4px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 16px; }
-  .tab {
-    flex: 1; text-align: center;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px; font-weight: 500;
-    cursor: pointer; border: none; background: none;
-    color: var(--muted); transition: all 0.15s;
-    font-family: var(--body);
-  }
-  .tab.active { background: var(--surface); color: var(--text); }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* ---- PAGE LAYOUT HELPERS ---- */
-  .page-body { padding: 24px 28px; flex: 1; overflow-y: auto; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .stack { display: flex; flex-direction: column; gap: 16px; }
-  .row { display: flex; gap: 12px; align-items: center; }
-
-  /* ---- STAT CARDS ---- */
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 16px 18px;
-  }
-  .stat-value { font-family: var(--display); font-size: 28px; font-weight: 800; color: var(--text); }
-  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .stat-change { font-size: 11px; font-family: var(--mono); margin-top: 6px; }
-  .stat-up { color: var(--green); }
-
-  /* ---- LOGIN PAGE ---- */
-  .login-page {
-    display: none;
-    min-height: 100vh;
-    background: var(--bg);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .login-page.active { display: flex; }
-  .login-grid-bg {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-  .login-glow {
-    position: absolute;
-    width: 500px; height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .login-box {
-    position: relative;
-    width: 420px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    padding: 40px;
-    z-index: 1;
-  }
-  .login-logo {
-    font-family: var(--display);
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-  .login-tagline {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 32px;
-    font-family: var(--mono);
-  }
-  .login-divider {
-    display: flex; align-items: center; gap: 12px;
-    margin: 20px 0;
-    color: var(--muted); font-size: 12px;
-  }
-  .login-divider::before, .login-divider::after {
-    content: ''; flex: 1;
-    height: 1px; background: var(--border);
-  }
-  .idp-btn {
-    width: 100%;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    padding: 12px 20px;
-    border-radius: var(--radius-lg);
-    font-size: 14px; font-weight: 500;
-    cursor: pointer; border: none;
-    transition: all 0.2s;
-    margin-bottom: 8px;
-    font-family: var(--body);
-    position: relative;
-    overflow: hidden;
-  }
-  .idp-btn::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: rgba(255,255,255,0);
-    transition: background 0.15s;
-  }
-  .idp-btn:hover::after { background: rgba(255,255,255,0.04); }
-  .idp-btn-primary {
-    background: linear-gradient(135deg, #1a3a6b 0%, #0f2447 100%);
-    color: #e8f0ff;
-    border: 1px solid rgba(59,130,246,0.3);
-  }
-  .idp-btn-primary:hover { border-color: rgba(59,130,246,0.6); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(59,130,246,0.2); }
-  .idp-icon {
-    width: 20px; height: 20px;
-    border-radius: 4px;
-    background: var(--accent-dim);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800;
-    color: var(--accent2);
-    flex-shrink: 0;
-    font-family: var(--mono);
-  }
-
-  /* ---- USER PROFILE CARD ---- */
-  .user-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    text-align: center;
-  }
-  .avatar-lg {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--accent-dim);
-    border: 2px solid var(--accent-glow);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 700;
-    color: var(--accent2);
-    font-family: var(--display);
-  }
-
-  /* ---- TOKEN VIEWER ---- */
-  .token-section { margin-bottom: 16px; }
-  .token-label { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; }
-  .token-value {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: #7a9cc9;
-    word-break: break-all;
-    max-height: 80px;
-    overflow-y: auto;
-    line-height: 1.5;
-  }
-
-  /* ---- SCROLLBAR ---- */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  /* ---- ANIMATIONS ---- */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .fade-in { animation: fadeIn 0.25s ease-out; }
-  .spin { animation: spin 1s linear infinite; display: inline-block; }
-  .pulse { animation: pulse 2s infinite; }
-
-  /* Spinner */
-  .spinner {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-
-  /* ---- MISC ---- */
-  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .text-muted { color: var(--muted); }
-  .text-sm { font-size: 12px; }
-  .text-mono { font-family: var(--mono); }
-  .text-accent { color: var(--accent2); }
-  .text-green { color: var(--green); }
-  .text-red { color: var(--red); }
-  .mb-0 { margin-bottom: 0; }
-  .mt-8 { margin-top: 8px; }
-  .gap-8 { gap: 8px; }
-  .hidden { display: none !important; }
-
-  /* IDP Config accordion-style list item */
-  .idp-config-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    transition: border-color 0.15s;
-  }
-  .idp-config-item:hover { border-color: var(--border2); }
-  .idp-config-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 16px;
-    cursor: pointer;
-  }
-  .idp-config-body {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    display: none;
-  }
-  .idp-config-body.open { display: block; }
-  .idp-color-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* Token claims table */
-  .claims-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 6px 16px;
-    font-size: 12px;
-  }
-  .claim-key { color: var(--muted); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
-  .claim-val { color: var(--text); word-break: break-word; }
-
-  /* Modal */
-  .modal-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
-    display: none;
-  }
-  .modal-backdrop.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    padding: 28px;
-    width: 520px;
-    max-width: 95vw;
-    max-height: 85vh;
-    overflow-y: auto;
-    animation: fadeIn 0.2s ease-out;
-  }
-  .modal-title {
-    font-family: var(--display);
-    font-size: 16px; font-weight: 700;
-    margin-bottom: 20px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .modal-close {
-    background: none; border: none; color: var(--muted);
-    cursor: pointer; font-size: 18px; line-height: 1;
-    padding: 2px 6px; border-radius: 4px;
-    transition: color 0.15s;
-  }
-  .modal-close:hover { color: var(--text); }
-
-  /* Notification toast */
-  .toast-area {
-    position: fixed; bottom: 20px; right: 20px;
-    z-index: 999;
-    display: flex; flex-direction: column; gap: 8px;
-    pointer-events: none;
-  }
-  .toast {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--text);
-    pointer-events: auto;
-    animation: fadeIn 0.2s ease-out;
-    max-width: 320px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .toast.success { border-color: rgba(34,197,94,0.3); }
-  .toast.error { border-color: rgba(239,68,68,0.3); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OIDC Federation Tester — SP Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ═══════ LOGIN PAGE ═══════ -->
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════════════════════════ -->
 <div class="login-page active" id="loginPage">
   <div class="login-grid-bg"></div>
   <div class="login-glow"></div>
@@ -686,7 +37,11 @@
     <div class="login-divider">or continue with federated identity</div>
 
     <div id="idpButtons"></div>
-    <div id="noIdpsMsg" class="alert alert-warn hidden">No IDPs configured. <a href="#" style="color:inherit;text-decoration:underline" onclick="showApp();nav('idps');return false;">Add one →</a></div>
+    <div id="noIdpsMsg" class="alert alert-warn hidden">
+      No IDPs configured.
+      <a href="#" style="color:inherit;text-decoration:underline" onclick="showApp();nav('idps');return false;">Add one →</a>
+    </div>
+
     <div style="margin-top:20px; text-align:center;">
       <span class="text-muted text-sm">No account? </span>
       <a href="#" class="text-sm text-accent" onclick="openRegisterModal(); return false;">Create local account</a>
@@ -696,20 +51,25 @@
   </div>
 </div>
 
-<!-- ═══════ MAIN APP ═══════ -->
+<!-- ═══════════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════════ -->
 <div class="app" id="mainApp" style="display:none;">
-  <!-- Sidebar -->
+
+  <!-- ─── SIDEBAR ─── -->
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">SP Portal</div>
       <div class="logo-sub">OIDC Federation Tester</div>
     </div>
+
     <div class="nav-section">
       <div class="nav-label">Overview</div>
       <button class="nav-item active" onclick="nav('dashboard')" id="nav-dashboard">
         <span class="dot"></span> Dashboard
       </button>
     </div>
+
     <div class="nav-section">
       <div class="nav-label">Federation</div>
       <button class="nav-item" onclick="nav('idps')" id="nav-idps">
@@ -723,6 +83,7 @@
         <span class="dot"></span> Token Inspector
       </button>
     </div>
+
     <div class="nav-section">
       <div class="nav-label">Users</div>
       <button class="nav-item" onclick="nav('users')" id="nav-users">
@@ -733,6 +94,7 @@
         <span class="dot"></span> Active Sessions
       </button>
     </div>
+
     <div class="nav-section">
       <div class="nav-label">Logs</div>
       <button class="nav-item" onclick="nav('audit')" id="nav-audit">
@@ -740,6 +102,7 @@
         <span class="nav-badge" id="auditCount">0</span>
       </button>
     </div>
+
     <div class="sidebar-bottom">
       <div class="session-pill" onclick="nav('profile')">
         <div class="avatar-sm" id="sidebarAvatar">?</div>
@@ -752,10 +115,12 @@
     </div>
   </div>
 
-  <!-- Main content -->
+  <!-- ─── MAIN CONTENT ─── -->
   <div class="main">
 
-    <!-- ───── DASHBOARD ───── -->
+    <!-- ───────────────────────────────────────
+         DASHBOARD
+    ─────────────────────────────────────── -->
     <div class="page active" id="page-dashboard">
       <div class="topbar">
         <div>
@@ -769,7 +134,11 @@
       </div>
       <div class="page-body stack fade-in">
         <div id="dashAlert" class="alert alert-warn">
-          <span>⚠</span><span>No session active. <a href="#" onclick="showLoginPage();return false;" style="color:inherit;text-decoration:underline">Sign in</a> or configure an IDP to test federation.</span>
+          <span>⚠</span>
+          <span>No session active.
+            <a href="#" onclick="showLoginPage();return false;" style="color:inherit;text-decoration:underline">Sign in</a>
+            or configure an IDP to test federation.
+          </span>
         </div>
         <div class="three-col">
           <div class="stat-card">
@@ -816,7 +185,9 @@
       </div>
     </div>
 
-    <!-- ───── IDP CONFIG ───── -->
+    <!-- ───────────────────────────────────────
+         IDP CONFIGURATION
+    ─────────────────────────────────────── -->
     <div class="page" id="page-idps">
       <div class="topbar">
         <div>
@@ -827,13 +198,18 @@
       </div>
       <div class="page-body stack fade-in">
         <div class="alert alert-info">
-          <span>ℹ</span><span>Configure your ForgeRock AM or any OIDC-compliant IDP. All redirect URIs must be registered in the IDP client settings. Use <code style="font-family:var(--mono)">?callback=1</code> on this page's URL as the redirect URI.</span>
+          <span>ℹ</span>
+          <span>Configure your ForgeRock AM or any OIDC-compliant IDP. All redirect URIs must be registered
+            in the IDP client settings. Use <code style="font-family:var(--mono)">?callback=1</code> on this
+            page's URL as the redirect URI.</span>
         </div>
         <div id="idpList" class="stack"></div>
       </div>
     </div>
 
-    <!-- ───── OIDC FLOW TRACER ───── -->
+    <!-- ───────────────────────────────────────
+         OIDC FLOW TRACER
+    ─────────────────────────────────────── -->
     <div class="page" id="page-oidcflow">
       <div class="topbar">
         <div>
@@ -842,6 +218,7 @@
         </div>
       </div>
       <div class="page-body two-col fade-in" style="align-items:start;">
+
         <!-- Left: controls -->
         <div class="stack">
           <div class="card">
@@ -872,8 +249,11 @@
                 </label>
               </div>
             </div>
-            <button class="btn btn-primary" style="width:100%;justify-content:center;" id="startFlowBtn" onclick="startOidcFlow()">▶ Start Authorization Flow</button>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" id="startFlowBtn" onclick="startOidcFlow()">
+              ▶ Start Authorization Flow
+            </button>
           </div>
+
           <div class="card" id="manualCodeCard" style="display:none;">
             <div class="card-header"><div class="card-title">Manual Code Entry</div></div>
             <div class="form-group">
@@ -883,7 +263,8 @@
             <button class="btn btn-success btn-sm" onclick="exchangeCodeManual()">Exchange Code →</button>
           </div>
         </div>
-        <!-- Right: steps -->
+
+        <!-- Right: step tracker -->
         <div class="stack">
           <div class="card">
             <div class="card-header">
@@ -935,23 +316,30 @@
               </div>
             </div>
           </div>
+
           <div class="card" id="flowRequestCard" style="display:none;">
             <div class="card-header"><div class="card-title">Authorization Request URL</div></div>
             <div class="code-block" id="flowRequestUrl" style="font-size:10px;"></div>
             <div style="margin-top:10px;">
               <button class="btn btn-ghost btn-sm" onclick="copyFlowUrl()">Copy URL</button>
-              <span class="text-sm text-muted" style="margin-left:8px;" id="flowOpenNote">Browser popup may be blocked. Copy URL and open manually, then paste code above.</span>
+              <span class="text-sm text-muted" style="margin-left:8px;" id="flowOpenNote">
+                Browser popup may be blocked. Copy URL and open manually, then paste code above.
+              </span>
             </div>
           </div>
+
           <div id="flowResult" style="display:none;" class="card">
             <div class="card-header"><div class="card-title">Flow Result</div></div>
             <div id="flowResultBody"></div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- ───── TOKEN INSPECTOR ───── -->
+    <!-- ───────────────────────────────────────
+         TOKEN INSPECTOR
+    ─────────────────────────────────────── -->
     <div class="page" id="page-tokens">
       <div class="topbar">
         <div>
@@ -965,7 +353,9 @@
             <div class="card-header"><div class="card-title">Paste Token</div></div>
             <div class="form-group">
               <label class="form-label">JWT / Access Token</label>
-              <textarea class="form-textarea" id="tokenInput" placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." style="min-height:100px;"></textarea>
+              <textarea class="form-textarea" id="tokenInput"
+                placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                style="min-height:100px;"></textarea>
             </div>
             <button class="btn btn-primary btn-sm" onclick="decodeToken()">Decode →</button>
           </div>
@@ -973,22 +363,26 @@
             <div class="card-header"><div class="card-title">Decoded Claims</div></div>
             <div class="tabs">
               <button class="tab active" onclick="tokenTab('header',this)">Header</button>
-              <button class="tab" onclick="tokenTab('payload',this)">Payload</button>
-              <button class="tab" onclick="tokenTab('raw',this)">Raw</button>
+              <button class="tab"        onclick="tokenTab('payload',this)">Payload</button>
+              <button class="tab"        onclick="tokenTab('raw',this)">Raw</button>
             </div>
             <div class="tab-panel active" id="token-header-panel"><div class="claims-grid" id="tokenHeaderGrid"></div></div>
-            <div class="tab-panel" id="token-payload-panel"><div class="claims-grid" id="tokenPayloadGrid"></div></div>
-            <div class="tab-panel" id="token-raw-panel"><div class="code-block" id="tokenRaw"></div></div>
+            <div class="tab-panel"        id="token-payload-panel"><div class="claims-grid" id="tokenPayloadGrid"></div></div>
+            <div class="tab-panel"        id="token-raw-panel"><div class="code-block" id="tokenRaw"></div></div>
           </div>
         </div>
         <div class="card" id="sessionTokensCard">
           <div class="card-header"><div class="card-title">Session Tokens</div></div>
-          <div id="sessionTokensList"><div class="text-muted text-sm">Complete an OIDC flow to see tokens here.</div></div>
+          <div id="sessionTokensList">
+            <div class="text-muted text-sm">Complete an OIDC flow to see tokens here.</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ───── USER DIRECTORY ───── -->
+    <!-- ───────────────────────────────────────
+         USER DIRECTORY
+    ─────────────────────────────────────── -->
     <div class="page" id="page-users">
       <div class="topbar">
         <div>
@@ -1023,7 +417,9 @@
       </div>
     </div>
 
-    <!-- ───── SESSIONS ───── -->
+    <!-- ───────────────────────────────────────
+         ACTIVE SESSIONS
+    ─────────────────────────────────────── -->
     <div class="page" id="page-sessions">
       <div class="topbar">
         <div>
@@ -1036,7 +432,12 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>User</th><th>IDP</th><th>Auth Method</th><th>Started</th><th>Tokens</th><th>Actions</th>
+                <th>User</th>
+                <th>IDP</th>
+                <th>Auth Method</th>
+                <th>Started</th>
+                <th>Tokens</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody id="sessionsTableBody"></tbody>
@@ -1045,7 +446,9 @@
       </div>
     </div>
 
-    <!-- ───── AUDIT LOG ───── -->
+    <!-- ───────────────────────────────────────
+         AUDIT LOG
+    ─────────────────────────────────────── -->
     <div class="page" id="page-audit">
       <div class="topbar">
         <div>
@@ -1058,7 +461,14 @@
         <div class="card">
           <table class="data-table">
             <thead>
-              <tr><th>Time</th><th>Event</th><th>User</th><th>IDP</th><th>Status</th><th>Detail</th></tr>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>User</th>
+                <th>IDP</th>
+                <th>Status</th>
+                <th>Detail</th>
+              </tr>
             </thead>
             <tbody id="auditTableBody"></tbody>
           </table>
@@ -1067,7 +477,9 @@
       </div>
     </div>
 
-    <!-- ───── PROFILE ───── -->
+    <!-- ───────────────────────────────────────
+         PROFILE
+    ─────────────────────────────────────── -->
     <div class="page" id="page-profile">
       <div class="topbar">
         <div><div class="topbar-title">My Profile</div></div>
@@ -1086,12 +498,14 @@
       </div>
     </div>
 
-  </div><!-- .main -->
-</div><!-- .app -->
+  </div><!-- /.main -->
+</div><!-- /.app -->
 
-<!-- ═══════ MODALS ═══════ -->
+<!-- ═══════════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════════ -->
 
-<!-- Add/Edit IDP -->
+<!-- Add / Edit IDP -->
 <div class="modal-backdrop" id="idpModal">
   <div class="modal">
     <div class="modal-title">
@@ -1180,7 +594,7 @@
   </div>
 </div>
 
-<!-- Register User -->
+<!-- Register / Create User -->
 <div class="modal-backdrop" id="registerModal">
   <div class="modal">
     <div class="modal-title">
@@ -1220,7 +634,7 @@
   </div>
 </div>
 
-<!-- View User detail -->
+<!-- User Detail -->
 <div class="modal-backdrop" id="userDetailModal">
   <div class="modal">
     <div class="modal-title">
@@ -1231,1122 +645,9 @@
   </div>
 </div>
 
-<!-- Toast area -->
+<!-- Toast notification area -->
 <div class="toast-area" id="toastArea"></div>
 
-<script>
-// ═══════════════════════════════════════════════════════
-//  APPLICATION STATE
-// ═══════════════════════════════════════════════════════
-const STORAGE_KEY = 'oidcSpTester_v2';
-
-let APP = loadState() || {
-  idps: [],
-  users: [
-    { id: uid(), name: 'Admin User', username: 'admin', email: 'admin@example.com',
-      password: hashPw('admin123'), role: 'admin', source: 'local',
-      idpSubs: {}, createdAt: new Date().toISOString(), lastLogin: null, loginCount: 0 }
-  ],
-  sessions: [],
-  auditLog: [],
-  currentSession: null,
-  stats: { logins: 0 }
-};
-
-let FLOW_STATE = {
-  idpId: null, state: null, nonce: null,
-  codeVerifier: null, codeChallenge: null,
-  authCode: null, tokens: null, userinfo: null,
-  startedAt: null
-};
-
-function loadState() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return null; }
-}
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e) {}
-}
-
-// ═══════════════════════════════════════════════════════
-//  CRYPTO / UTILS
-// ═══════════════════════════════════════════════════════
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-function hashPw(pw) { let h=0; for(let c of pw){h=(h<<5)-h+c.charCodeAt(0);h|=0;} return h.toString(16); }
-function fmtTime(iso) { if(!iso) return '—'; return new Date(iso).toLocaleString(); }
-function fmtAgo(iso) {
-  if(!iso) return '—';
-  const d = (Date.now() - new Date(iso)) / 1000;
-  if(d<60) return Math.round(d)+'s ago';
-  if(d<3600) return Math.round(d/60)+'m ago';
-  if(d<86400) return Math.round(d/3600)+'h ago';
-  return Math.round(d/86400)+'d ago';
-}
-function randomStr(n=32) {
-  const arr = new Uint8Array(n);
-  crypto.getRandomValues(arr);
-  return btoa(String.fromCharCode(...arr)).replace(/[+/=]/g,'').slice(0,n);
-}
-async function sha256base64url(str) {
-  const enc = new TextEncoder().encode(str);
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
-    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-function b64urlDecode(s) {
-  s = s.replace(/-/g,'+').replace(/_/g,'/');
-  while(s.length%4) s+='=';
-  return JSON.parse(atob(s));
-}
-function parseJwt(token) {
-  try {
-    const parts = token.split('.');
-    return { header: b64urlDecode(parts[0]), payload: b64urlDecode(parts[1]), raw: token };
-  } catch(e) { return null; }
-}
-function initials(name) {
-  if(!name) return '?';
-  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-}
-
-// ═══════════════════════════════════════════════════════
-//  NAVIGATION
-// ═══════════════════════════════════════════════════════
-function nav(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const pg = document.getElementById('page-'+page);
-  if(pg) pg.classList.add('active');
-  const nb = document.getElementById('nav-'+page);
-  if(nb) nb.classList.add('active');
-
-  if(page==='dashboard') renderDashboard();
-  if(page==='idps') renderIdps();
-  if(page==='oidcflow') renderFlowPage();
-  if(page==='users') renderUsers();
-  if(page==='sessions') renderSessions();
-  if(page==='audit') renderAudit();
-  if(page==='tokens') renderSessionTokens();
-  if(page==='profile') renderProfile();
-}
-
-function showLoginPage() {
-  document.getElementById('loginPage').classList.add('active');
-  document.getElementById('mainApp').style.display = 'none';
-  renderIdpButtons();
-}
-function showApp() {
-  document.getElementById('loginPage').classList.remove('active');
-  document.getElementById('mainApp').style.display = 'flex';
-  updateSidebar();
-  renderDashboard();
-}
-
-// ═══════════════════════════════════════════════════════
-//  AUTH — LOCAL
-// ═══════════════════════════════════════════════════════
-function localLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pw = document.getElementById('loginPassword').value;
-  const user = APP.users.find(u => (u.email===email||u.username===email) && u.password===hashPw(pw));
-  if(!user) { showLoginError('Invalid credentials.'); return; }
-  startSession(user, 'local', null);
-  showApp();
-  nav('dashboard');
-  toast(`Welcome back, ${user.name}!`, 'success');
-}
-function showLoginError(msg) {
-  document.getElementById('loginErrorMsg').textContent = msg;
-  document.getElementById('loginError').classList.remove('hidden');
-}
-function logout() {
-  if(APP.currentSession) {
-    addAudit('LOGOUT', APP.currentSession.userId, null, 'success', 'User signed out');
-    APP.currentSession = null;
-  }
-  saveState();
-  updateSidebar();
-  showLoginPage();
-  toast('Signed out.', 'success');
-}
-function startSession(user, method, idpId) {
-  const session = {
-    id: uid(), userId: user.id, userName: user.name,
-    userEmail: user.email, method, idpId,
-    startedAt: new Date().toISOString(),
-    tokens: FLOW_STATE.tokens || null
-  };
-  APP.currentSession = session;
-  APP.sessions.unshift(session);
-  if(APP.sessions.length > 50) APP.sessions = APP.sessions.slice(0,50);
-  user.lastLogin = new Date().toISOString();
-  user.loginCount = (user.loginCount||0) + 1;
-  APP.stats.logins = (APP.stats.logins||0) + 1;
-  addAudit('LOGIN', user.id, idpId, 'success', `Auth via ${method}`);
-  saveState();
-  updateSidebar();
-  renderSidebarBadges();
-}
-
-// ═══════════════════════════════════════════════════════
-//  AUTH — USER MANAGEMENT
-// ═══════════════════════════════════════════════════════
-function createUser(opts) {
-  if(opts) {
-    // programmatic (from IDP provisioning)
-    APP.users.push(opts);
-    saveState();
-    renderSidebarBadges();
-    return opts;
-  }
-  // from modal
-  const name = document.getElementById('regName').value.trim();
-  const username = document.getElementById('regUsername').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const pw = document.getElementById('regPassword').value;
-  const role = document.getElementById('regRole').value;
-  if(!name||!username||!email||!pw) { regError('All fields required.'); return; }
-  if(pw.length<6) { regError('Password min 6 chars.'); return; }
-  if(APP.users.find(u=>u.email===email)) { regError('Email already exists.'); return; }
-  if(APP.users.find(u=>u.username===username)) { regError('Username already taken.'); return; }
-  const user = { id: uid(), name, username, email, password: hashPw(pw), role, source: 'local', idpSubs: {}, createdAt: new Date().toISOString(), lastLogin: null, loginCount: 0 };
-  APP.users.push(user);
-  saveState();
-  closeModal('registerModal');
-  renderUsers();
-  renderSidebarBadges();
-  toast(`User ${name} created.`, 'success');
-}
-function regError(msg) {
-  document.getElementById('regErrorMsg').textContent = msg;
-  document.getElementById('regError').classList.remove('hidden');
-}
-function deleteUser(id) {
-  if(!confirm('Delete this user?')) return;
-  APP.users = APP.users.filter(u=>u.id!==id);
-  saveState();
-  renderUsers();
-  renderSidebarBadges();
-  toast('User deleted.', 'success');
-}
-function viewUserDetail(id) {
-  const user = APP.users.find(u=>u.id===id);
-  if(!user) return;
-  const el = document.getElementById('userDetailBody');
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-      <div class="avatar-lg">${initials(user.name)}</div>
-      <div>
-        <div style="font-size:18px;font-weight:700;font-family:var(--display);">${user.name}</div>
-        <div class="text-muted text-sm">${user.email}</div>
-        <div style="margin-top:6px;display:flex;gap:6px;">
-          ${sourceBadge(user.source)}
-          <span class="badge ${user.role==='admin'?'badge-purple':'badge-gray'}">${user.role}</span>
-        </div>
-      </div>
-    </div>
-    <div class="claims-grid">
-      <div class="claim-key">username</div><div class="claim-val">${user.username||'—'}</div>
-      <div class="claim-key">id</div><div class="claim-val text-mono" style="font-size:11px;">${user.id}</div>
-      <div class="claim-key">created</div><div class="claim-val">${fmtTime(user.createdAt)}</div>
-      <div class="claim-key">last login</div><div class="claim-val">${fmtTime(user.lastLogin)}</div>
-      <div class="claim-key">login count</div><div class="claim-val">${user.loginCount||0}</div>
-    </div>
-    ${Object.keys(user.idpSubs||{}).length ? `
-    <hr>
-    <div class="card-title" style="margin-bottom:10px;">Linked IDP Identities</div>
-    ${Object.entries(user.idpSubs).map(([idpId,sub])=>{
-      const idp = APP.idps.find(i=>i.id===idpId);
-      return `<div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-bottom:6px;">
-        <span class="badge badge-blue">${idp?idp.name:idpId}</span>
-        <span class="text-mono text-muted">${sub}</span>
-      </div>`;
-    }).join('')}` : ''}
-  `;
-  openModal('userDetailModal');
-}
-
-// ═══════════════════════════════════════════════════════
-//  IDP CONFIGURATION
-// ═══════════════════════════════════════════════════════
-function openIdpModal(id) {
-  document.getElementById('editIdpId').value = id||'';
-  document.getElementById('idpModalTitle').textContent = id ? 'Edit IDP' : 'Add Identity Provider';
-  if(id) {
-    const idp = APP.idps.find(i=>i.id===id);
-    if(idp) {
-      ['Name','Color','Protocol','Issuer','AuthEndpoint','TokenEndpoint','UserinfoEndpoint',
-       'JwksUri','ClientId','ClientSecret','RedirectUri','Scopes','MatchField','AutoProvision']
-       .forEach(f => {
-         const el = document.getElementById('idp'+f);
-         if(el) el.value = idp[f.toLowerCase().replace('endpoint','Endpoint')] ?? idp[f.charAt(0).toLowerCase()+f.slice(1)] ?? '';
-       });
-      document.getElementById('idpColor').value = idp.color||'#3b82f6';
-      document.getElementById('idpProtocol').value = idp.protocol||'oidc';
-      document.getElementById('idpIssuer').value = idp.issuer||'';
-      document.getElementById('idpAuthEndpoint').value = idp.authEndpoint||'';
-      document.getElementById('idpTokenEndpoint').value = idp.tokenEndpoint||'';
-      document.getElementById('idpUserinfoEndpoint').value = idp.userinfoEndpoint||'';
-      document.getElementById('idpJwksUri').value = idp.jwksUri||'';
-      document.getElementById('idpClientId').value = idp.clientId||'';
-      document.getElementById('idpClientSecret').value = idp.clientSecret||'';
-      document.getElementById('idpRedirectUri').value = idp.redirectUri||'';
-      document.getElementById('idpScopes').value = idp.scopes||'openid profile email';
-      document.getElementById('idpMatchField').value = idp.matchField||'email';
-      document.getElementById('idpAutoProvision').value = String(idp.autoProvision!==false);
-    }
-  } else {
-    // defaults
-    document.getElementById('idpName').value = '';
-    document.getElementById('idpColor').value = '#3b82f6';
-    document.getElementById('idpProtocol').value = 'oidc';
-    document.getElementById('idpIssuer').value = '';
-    document.getElementById('idpAuthEndpoint').value = '';
-    document.getElementById('idpTokenEndpoint').value = '';
-    document.getElementById('idpUserinfoEndpoint').value = '';
-    document.getElementById('idpJwksUri').value = '';
-    document.getElementById('idpClientId').value = '';
-    document.getElementById('idpClientSecret').value = '';
-    document.getElementById('idpRedirectUri').value = window.location.href.split('?')[0];
-    document.getElementById('idpScopes').value = 'openid profile email';
-    document.getElementById('idpMatchField').value = 'email';
-    document.getElementById('idpAutoProvision').value = 'true';
-  }
-  openModal('idpModal');
-}
-function saveIdp() {
-  const id = document.getElementById('editIdpId').value;
-  const idp = {
-    id: id || uid(),
-    name: document.getElementById('idpName').value.trim(),
-    color: document.getElementById('idpColor').value,
-    protocol: document.getElementById('idpProtocol').value,
-    issuer: document.getElementById('idpIssuer').value.trim(),
-    authEndpoint: document.getElementById('idpAuthEndpoint').value.trim(),
-    tokenEndpoint: document.getElementById('idpTokenEndpoint').value.trim(),
-    userinfoEndpoint: document.getElementById('idpUserinfoEndpoint').value.trim(),
-    jwksUri: document.getElementById('idpJwksUri').value.trim(),
-    clientId: document.getElementById('idpClientId').value.trim(),
-    clientSecret: document.getElementById('idpClientSecret').value,
-    redirectUri: document.getElementById('idpRedirectUri').value.trim(),
-    scopes: document.getElementById('idpScopes').value.trim(),
-    matchField: document.getElementById('idpMatchField').value,
-    autoProvision: document.getElementById('idpAutoProvision').value === 'true',
-    createdAt: new Date().toISOString()
-  };
-  if(!idp.name || !idp.authEndpoint || !idp.tokenEndpoint || !idp.clientId) {
-    toast('Name, Auth/Token endpoints and Client ID are required.', 'error'); return;
-  }
-  if(id) {
-    const idx = APP.idps.findIndex(i=>i.id===id);
-    if(idx>=0) APP.idps[idx] = idp;
-  } else {
-    APP.idps.push(idp);
-  }
-  saveState();
-  closeModal('idpModal');
-  renderIdps();
-  renderSidebarBadges();
-  renderIdpButtons();
-  toast(`IDP "${idp.name}" saved.`, 'success');
-}
-function deleteIdp(id) {
-  if(!confirm('Remove this IDP?')) return;
-  APP.idps = APP.idps.filter(i=>i.id!==id);
-  saveState();
-  renderIdps();
-  renderSidebarBadges();
-  renderIdpButtons();
-}
-
-// ═══════════════════════════════════════════════════════
-//  OIDC FLOW
-// ═══════════════════════════════════════════════════════
-async function startOidcFlow() {
-  const idpId = document.getElementById('flowIdpSelect').value;
-  const idp = APP.idps.find(i=>i.id===idpId);
-  if(!idp) { toast('Select an IDP first.', 'error'); return; }
-
-  resetFlow();
-  FLOW_STATE = { idpId, state:null, nonce:null, codeVerifier:null, codeChallenge:null, authCode:null, tokens:null, userinfo:null, startedAt: new Date().toISOString() };
-
-  const usePkce = document.getElementById('usePkce').checked;
-  const useNonce = document.getElementById('useNonce').checked;
-  const scopes = document.getElementById('flowScopes').value.trim();
-  const acr = document.getElementById('flowAcr').value.trim();
-
-  // Step 1: Generate state & PKCE
-  setStep('state','active');
-  FLOW_STATE.state = randomStr(32);
-  FLOW_STATE.nonce = useNonce ? randomStr(32) : null;
-
-  let challengeInfo = 'state='+FLOW_STATE.state.slice(0,16)+'…';
-  if(usePkce) {
-    FLOW_STATE.codeVerifier = randomStr(64);
-    FLOW_STATE.codeChallenge = await sha256base64url(FLOW_STATE.codeVerifier);
-    challengeInfo += ' | verifier='+FLOW_STATE.codeVerifier.slice(0,12)+'… challenge='+FLOW_STATE.codeChallenge.slice(0,12)+'…';
-  }
-  if(useNonce) challengeInfo += ' | nonce='+FLOW_STATE.nonce.slice(0,12)+'…';
-
-  // Persist flow state for callback
-  sessionStorage.setItem('oidcFlowState', JSON.stringify({ ...FLOW_STATE, idpId }));
-
-  setStep('state','done', challengeInfo);
-
-  // Step 2: Build authorize URL
-  setStep('authorize','active');
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: idp.clientId,
-    redirect_uri: idp.redirectUri || window.location.href.split('?')[0],
-    scope: scopes,
-    state: FLOW_STATE.state
-  });
-  if(usePkce) {
-    params.set('code_challenge', FLOW_STATE.codeChallenge);
-    params.set('code_challenge_method', 'S256');
-  }
-  if(useNonce) params.set('nonce', FLOW_STATE.nonce);
-  if(acr) params.set('acr_values', acr);
-
-  const authUrl = idp.authEndpoint + '?' + params.toString();
-  setStep('authorize','done', authUrl.slice(0,80)+'…');
-
-  document.getElementById('flowRequestCard').style.display = '';
-  document.getElementById('flowRequestUrl').textContent = authUrl;
-  document.getElementById('manualCodeCard').style.display = '';
-
-  setStep('callback','active','Waiting for redirect…');
-
-  addAudit('OIDC_FLOW_START', APP.currentSession?.userId||null, idpId, 'pending', 'Authorization request built');
-
-  // Try to open popup
-  try {
-    const popup = window.open(authUrl, 'oidcLogin', 'width=600,height=700,scrollbars=yes');
-    if(!popup) throw new Error('blocked');
-    let checkCount = 0;
-    const timer = setInterval(() => {
-      checkCount++;
-      if(checkCount > 300) { clearInterval(timer); }
-      try {
-        const popupUrl = popup.location.href;
-        if(popupUrl && popupUrl.includes('code=')) {
-          clearInterval(timer);
-          popup.close();
-          const cbParams = new URL(popupUrl).searchParams;
-          handleCallback(cbParams);
-        }
-        if(popup.closed && checkCount > 2) clearInterval(timer);
-      } catch(e) { /* cross-origin, still loading */ }
-    }, 500);
-  } catch(e) {
-    // popup blocked — user must paste code
-    toast('Popup blocked. Copy the URL, complete login, then paste the code.', 'warn');
-  }
-}
-
-async function handleCallback(params) {
-  const code = params.get('code');
-  const returnedState = params.get('state');
-  const error = params.get('error');
-
-  if(error) {
-    setStep('callback','error', 'IDP error: '+error+' — '+(params.get('error_description')||''));
-    addAudit('OIDC_CALLBACK', null, FLOW_STATE.idpId, 'error', error);
-    return;
-  }
-  if(returnedState !== FLOW_STATE.state) {
-    setStep('callback','error','State mismatch! Possible CSRF. Expected: '+FLOW_STATE.state.slice(0,12));
-    return;
-  }
-
-  FLOW_STATE.authCode = code;
-  setStep('callback','done','code='+code.slice(0,20)+'…  state ✓ verified');
-
-  await exchangeCode(code);
-}
-
-async function exchangeCodeManual() {
-  const code = document.getElementById('manualCode').value.trim();
-  if(!code) { toast('Enter the authorization code.', 'error'); return; }
-  const cbParams = new URLSearchParams('code='+code+'&state='+FLOW_STATE.state);
-  handleCallback(cbParams);
-}
-
-async function exchangeCode(code) {
-  const idp = APP.idps.find(i=>i.id===FLOW_STATE.idpId);
-  if(!idp) return;
-
-  setStep('token','active');
-
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: idp.redirectUri || window.location.href.split('?')[0],
-    client_id: idp.clientId
-  });
-  if(idp.clientSecret) body.set('client_secret', idp.clientSecret);
-  if(FLOW_STATE.codeVerifier) body.set('code_verifier', FLOW_STATE.codeVerifier);
-
-  const tokenReqDetail = `POST ${idp.tokenEndpoint}\n  grant_type=authorization_code\n  code=${code.slice(0,20)}…\n  ${FLOW_STATE.codeVerifier?'code_verifier='+FLOW_STATE.codeVerifier.slice(0,16)+'…':'(no PKCE)'}`;
-  setStep('token','active', tokenReqDetail);
-
-  try {
-    const resp = await fetch(idp.tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString()
-    });
-    const data = await resp.json();
-    if(!resp.ok || data.error) {
-      setStep('token','error', 'Error: '+(data.error||resp.status)+' — '+(data.error_description||''));
-      addAudit('TOKEN_EXCHANGE', null, idp.id, 'error', data.error||resp.status);
-      return;
-    }
-    FLOW_STATE.tokens = data;
-    setStep('token','done',
-      `access_token ✓ (${data.token_type||'Bearer'}, expires_in=${data.expires_in||'?'}s)${data.id_token?' | id_token ✓':''}${data.refresh_token?' | refresh_token ✓':''}`
-    );
-    addAudit('TOKEN_EXCHANGE', null, idp.id, 'success', 'Tokens received');
-    await fetchUserInfo(idp, data);
-  } catch(e) {
-    setStep('token','error', 'Network error: '+e.message);
-    addAudit('TOKEN_EXCHANGE', null, idp.id, 'error', e.message);
-  }
-}
-
-async function fetchUserInfo(idp, tokens) {
-  if(!idp.userinfoEndpoint) {
-    setStep('userinfo','done','No userinfo endpoint configured — skipping');
-    provisionUser(idp, tokens, {});
-    return;
-  }
-  setStep('userinfo','active', `GET ${idp.userinfoEndpoint}`);
-  try {
-    const resp = await fetch(idp.userinfoEndpoint, {
-      headers: {
-        'Authorization': 'Bearer '+tokens.access_token,
-        'Accept': 'application/json'
-      }
-    });
-    const info = await resp.json();
-    if(!resp.ok) {
-      setStep('userinfo','error','Error '+resp.status+': '+JSON.stringify(info));
-      return;
-    }
-    FLOW_STATE.userinfo = info;
-    setStep('userinfo','done', `sub=${info.sub||'?'} email=${info.email||'?'} name=${info.name||'?'}`);
-    addAudit('USERINFO', null, idp.id, 'success', `sub=${info.sub}`);
-    provisionUser(idp, tokens, info);
-  } catch(e) {
-    setStep('userinfo','error','Network error: '+e.message+' (check CORS)');
-    // Still try to provision from id_token
-    if(tokens.id_token) {
-      const claims = parseJwt(tokens.id_token);
-      if(claims) provisionUser(idp, tokens, claims.payload);
-    }
-  }
-}
-
-function provisionUser(idp, tokens, userinfo) {
-  setStep('provision','active');
-
-  // Merge with id_token claims if available
-  let claims = { ...userinfo };
-  if(tokens.id_token) {
-    const parsed = parseJwt(tokens.id_token);
-    if(parsed) claims = { ...parsed.payload, ...claims };
-  }
-
-  const matchField = idp.matchField || 'email';
-  const matchVal = claims[matchField] || claims.email || claims.sub;
-
-  let user = null;
-  let action = '';
-
-  // Try to match existing user
-  if(matchField === 'email') user = APP.users.find(u=>u.email===matchVal);
-  else if(matchField === 'username') user = APP.users.find(u=>u.username===matchVal);
-  else if(matchField === 'sub') user = APP.users.find(u=>u.idpSubs&&u.idpSubs[idp.id]===matchVal);
-
-  if(!user && claims.sub) {
-    user = APP.users.find(u=>u.idpSubs&&u.idpSubs[idp.id]===claims.sub);
-  }
-
-  if(user) {
-    // Link IDP sub if not already
-    if(!user.idpSubs) user.idpSubs = {};
-    if(claims.sub) user.idpSubs[idp.id] = claims.sub;
-    action = 'matched_existing';
-    setStep('provision','done', `Matched existing user: ${user.name} (${user.email})`);
-  } else if(idp.autoProvision) {
-    // Create new user
-    user = {
-      id: uid(),
-      name: claims.name || claims.given_name || claims.email || claims.sub || 'IDP User',
-      username: claims.preferred_username || claims.email?.split('@')[0] || claims.sub?.slice(0,12) || uid().slice(0,8),
-      email: claims.email || claims.sub+'@idp.local',
-      password: null,
-      role: 'user',
-      source: 'idp:'+idp.name,
-      idpSubs: { [idp.id]: claims.sub },
-      createdAt: new Date().toISOString(),
-      lastLogin: null, loginCount: 0
-    };
-    APP.users.push(user);
-    action = 'provisioned';
-    setStep('provision','done', `Auto-provisioned new user: ${user.name} (${user.email})`);
-    addAudit('USER_PROVISION', user.id, idp.id, 'success', 'New user created from IDP');
-    toast(`New user provisioned: ${user.name}`, 'success');
-  } else {
-    setStep('provision','error', 'No matching user found and auto-provision disabled.');
-    addAudit('USER_PROVISION', null, idp.id, 'error', `No match for ${matchField}=${matchVal}`);
-    return;
-  }
-
-  startSession(user, 'oidc:'+idp.name, idp.id);
-  renderSidebarBadges();
-
-  // Show result
-  showFlowResult(idp, tokens, claims, user, action);
-  renderSessionTokens();
-}
-
-function showFlowResult(idp, tokens, claims, user, action) {
-  const el = document.getElementById('flowResult');
-  const body = document.getElementById('flowResultBody');
-  el.style.display = '';
-
-  const idClaims = tokens.id_token ? parseJwt(tokens.id_token) : null;
-
-  body.innerHTML = `
-    <div class="alert alert-success" style="margin-bottom:14px;">
-      <span>✓</span>
-      <span>Federation successful — user ${action==='provisioned'?'<strong>provisioned</strong>':'<strong>matched</strong>'} and session started.</span>
-    </div>
-    <div class="two-col" style="margin-bottom:14px;">
-      <div>
-        <div class="token-label">Matched User</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-          <div class="avatar-sm" style="width:36px;height:36px;font-size:13px;">${initials(user.name)}</div>
-          <div>
-            <div style="font-weight:500;">${user.name}</div>
-            <div class="text-muted text-sm">${user.email}</div>
-            <div style="margin-top:4px;">${sourceBadge(user.source)}</div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="token-label">Token Summary</div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">
-          ${tokens.access_token ? '<div><span class="badge badge-green">access_token ✓</span></div>' : ''}
-          ${tokens.id_token ? '<div><span class="badge badge-blue">id_token ✓</span></div>' : ''}
-          ${tokens.refresh_token ? '<div><span class="badge badge-amber">refresh_token ✓</span></div>' : ''}
-        </div>
-      </div>
-    </div>
-    ${idClaims ? `
-    <div class="token-label">Identity Token Claims</div>
-    <div class="claims-grid" style="margin-top:6px;margin-bottom:12px;">
-      ${Object.entries(idClaims.payload).slice(0,12).map(([k,v])=>`
-        <div class="claim-key">${k}</div>
-        <div class="claim-val">${typeof v==='object'?JSON.stringify(v):String(v)}</div>
-      `).join('')}
-    </div>` : ''}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-primary btn-sm" onclick="showApp();nav('dashboard');">View Dashboard →</button>
-      <button class="btn btn-ghost btn-sm" onclick="nav('tokens')">Inspect Tokens</button>
-    </div>
-  `;
-}
-
-// ═══════════════════════════════════════════════════════
-//  FLOW UI HELPERS
-// ═══════════════════════════════════════════════════════
-function setStep(step, status, detail) {
-  const el = document.getElementById('step-'+step);
-  const icon = el.querySelector('.step-icon');
-  const det = document.getElementById('step-'+step+'-detail');
-  el.className = 'flow-step ' + (status==='done'?'done':status==='active'?'active':status==='error'?'error':'');
-  icon.className = 'step-icon ' + status;
-  const nums = {state:'1',authorize:'2',callback:'3',token:'4',userinfo:'5',provision:'6'};
-  icon.textContent = status==='done' ? '✓' : status==='error' ? '✕' : status==='active' ? '…' : nums[step];
-  if(detail && det) { det.textContent = detail; det.className = 'step-detail ' + (status==='done'?'ok':status==='error'?'err':''); }
-}
-function resetFlow() {
-  ['state','authorize','callback','token','userinfo','provision'].forEach(s=>{
-    setStep(s,'pending','');
-    const d = document.getElementById('step-'+s+'-detail');
-    if(d) d.className = 'step-detail';
-  });
-  document.getElementById('flowRequestCard').style.display='none';
-  document.getElementById('manualCodeCard').style.display='none';
-  document.getElementById('flowResult').style.display='none';
-  document.getElementById('flowSteps').querySelectorAll('.step-detail').forEach(d=>d.textContent='');
-  // Restore default details
-  document.getElementById('step-authorize-detail').textContent = 'Redirect to IDP /authorize';
-  document.getElementById('step-callback-detail').textContent = 'Awaiting redirect…';
-  document.getElementById('step-token-detail').textContent = 'POST /access_token with code';
-  document.getElementById('step-userinfo-detail').textContent = 'GET /userinfo with Bearer token';
-  document.getElementById('step-provision-detail').textContent = 'Match or create local user';
-}
-function copyFlowUrl() {
-  navigator.clipboard.writeText(document.getElementById('flowRequestUrl').textContent)
-    .then(()=>toast('URL copied!','success'));
-}
-
-// ═══════════════════════════════════════════════════════
-//  RENDER FUNCTIONS
-// ═══════════════════════════════════════════════════════
-function renderIdpButtons() {
-  const cont = document.getElementById('idpButtons');
-  const none = document.getElementById('noIdpsMsg');
-  if(!APP.idps.length) { cont.innerHTML=''; none.classList.remove('hidden'); return; }
-  none.classList.add('hidden');
-  cont.innerHTML = APP.idps.map(idp => `
-    <button class="idp-btn idp-btn-primary" onclick="initiateIdpLogin('${idp.id}')">
-      <div class="idp-icon" style="background:${idp.color}22;color:${idp.color};border-color:${idp.color}44;">${(idp.name[0]||'?').toUpperCase()}</div>
-      Login with ${idp.name}
-    </button>
-  `).join('');
-}
-
-function initiateIdpLogin(idpId) {
-  showApp();
-  nav('oidcflow');
-  document.getElementById('flowIdpSelect').value = idpId;
-  setTimeout(()=>startOidcFlow(), 100);
-}
-
-function renderDashboard() {
-  document.getElementById('statIdps').textContent = APP.idps.length;
-  document.getElementById('statUsers').textContent = APP.users.length;
-  document.getElementById('statLogins').textContent = APP.stats.logins||0;
-
-  const sessEl = document.getElementById('dashSession');
-  const alertEl = document.getElementById('dashAlert');
-  const logoutBtn = document.getElementById('logoutBtn');
-  if(APP.currentSession) {
-    alertEl.classList.add('hidden');
-    logoutBtn.style.display = '';
-    const user = APP.users.find(u=>u.id===APP.currentSession.userId);
-    sessEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="avatar-lg" style="width:48px;height:48px;font-size:16px;">${initials(APP.currentSession.userName)}</div>
-        <div>
-          <div style="font-weight:600;font-size:15px;">${APP.currentSession.userName}</div>
-          <div class="text-muted text-sm">${APP.currentSession.userEmail}</div>
-          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-            <span class="badge badge-green">● Active</span>
-            <span class="badge badge-gray">${APP.currentSession.method}</span>
-            ${APP.currentSession.tokens?.id_token ? '<span class="badge badge-blue">id_token</span>' : ''}
-            ${APP.currentSession.tokens?.access_token ? '<span class="badge badge-green">access_token</span>' : ''}
-          </div>
-          <div class="text-muted text-sm" style="margin-top:6px;">Since ${fmtAgo(APP.currentSession.startedAt)}</div>
-        </div>
-      </div>`;
-  } else {
-    alertEl.classList.remove('hidden');
-    logoutBtn.style.display = 'none';
-    sessEl.innerHTML = '<div class="text-muted text-sm">No active session.</div>';
-  }
-
-  const actEl = document.getElementById('dashActivity');
-  const recent = APP.auditLog.slice(0,6);
-  if(recent.length) {
-    actEl.innerHTML = recent.map(a=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
-        <span class="badge ${a.status==='success'?'badge-green':a.status==='error'?'badge-red':a.status==='pending'?'badge-amber':'badge-gray'}" style="flex-shrink:0;">
-          ${a.status}
-        </span>
-        <span style="flex:1;font-size:12px;">${a.event.replace(/_/g,' ')}</span>
-        <span class="text-muted text-sm">${fmtAgo(a.ts)}</span>
-      </div>
-    `).join('').replace(/border-bottom[^;]+;[^}]+}$/, '');
-  } else {
-    actEl.innerHTML = '<div class="text-muted text-sm">No activity yet.</div>';
-  }
-
-  const idpEl = document.getElementById('dashIdps');
-  if(APP.idps.length) {
-    idpEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
-        ${APP.idps.map(idp=>`
-          <div style="padding:12px;background:var(--surface2);border-radius:var(--radius);border-left:3px solid ${idp.color};">
-            <div style="font-weight:600;font-size:13px;">${idp.name}</div>
-            <div class="text-muted text-sm">${idp.protocol.toUpperCase()} · ${idp.clientId}</div>
-            <div style="margin-top:6px;display:flex;gap:4px;">
-              ${idp.autoProvision ? '<span class="badge badge-green">auto-provision</span>' : '<span class="badge badge-amber">match-only</span>'}
-            </div>
-          </div>
-        `).join('')}
-      </div>`;
-  } else {
-    idpEl.innerHTML = '<div class="text-muted text-sm">No IDPs configured. <a href="#" onclick="nav(\'idps\');return false;" style="color:var(--accent2)">Add one →</a></div>';
-  }
-}
-
-function renderIdps() {
-  const el = document.getElementById('idpList');
-  if(!APP.idps.length) {
-    el.innerHTML = `<div class="card"><div style="text-align:center;padding:32px;color:var(--muted);">
-      <div style="font-size:32px;margin-bottom:12px;">⛓</div>
-      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No IDPs configured</div>
-      <div style="font-size:13px;margin-bottom:16px;">Add your ForgeRock AM or any OIDC-compliant identity provider.</div>
-      <button class="btn btn-primary" onclick="openIdpModal()">+ Add IDP</button>
-    </div></div>`;
-    return;
-  }
-  el.innerHTML = APP.idps.map(idp => `
-    <div class="idp-config-item">
-      <div class="idp-config-header" onclick="toggleIdpBody('${idp.id}')">
-        <div class="idp-color-dot" style="background:${idp.color};"></div>
-        <div style="flex:1;">
-          <div style="font-weight:600;font-size:14px;">${idp.name}</div>
-          <div class="text-muted text-sm">${idp.authEndpoint||'—'}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span class="badge badge-blue">${idp.protocol.toUpperCase()}</span>
-          ${idp.autoProvision ? '<span class="badge badge-green">auto-provision</span>' : '<span class="badge badge-amber">match-only</span>'}
-        </div>
-        <div style="color:var(--muted);margin-left:8px;font-size:16px;">⌄</div>
-      </div>
-      <div class="idp-config-body" id="idpBody-${idp.id}">
-        <div class="two-col">
-          <div class="claims-grid">
-            <div class="claim-key">Client ID</div><div class="claim-val text-mono">${idp.clientId}</div>
-            <div class="claim-key">Match Field</div><div class="claim-val">${idp.matchField}</div>
-            <div class="claim-key">Scopes</div><div class="claim-val text-mono">${idp.scopes}</div>
-            <div class="claim-key">Redirect URI</div><div class="claim-val text-mono" style="font-size:11px;">${idp.redirectUri||'—'}</div>
-          </div>
-          <div class="claims-grid">
-            <div class="claim-key">Token Endpoint</div><div class="claim-val text-mono" style="font-size:11px;">${idp.tokenEndpoint}</div>
-            <div class="claim-key">UserInfo</div><div class="claim-val text-mono" style="font-size:11px;">${idp.userinfoEndpoint||'—'}</div>
-            <div class="claim-key">JWKS URI</div><div class="claim-val text-mono" style="font-size:11px;">${idp.jwksUri||'—'}</div>
-          </div>
-        </div>
-        <div style="margin-top:12px;display:flex;gap:8px;">
-          <button class="btn btn-ghost btn-sm" onclick="openIdpModal('${idp.id}')">Edit</button>
-          <button class="btn btn-ghost btn-sm" onclick="initiateIdpLogin('${idp.id}')">▶ Test Flow</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteIdp('${idp.id}')">Delete</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function toggleIdpBody(id) {
-  const el = document.getElementById('idpBody-'+id);
-  el.classList.toggle('open');
-}
-
-function renderFlowPage() {
-  const sel = document.getElementById('flowIdpSelect');
-  sel.innerHTML = APP.idps.length
-    ? APP.idps.map(i=>`<option value="${i.id}">${i.name}</option>`).join('')
-    : '<option value="">— No IDPs configured —</option>';
-}
-
-function renderUsers() {
-  const q = (document.getElementById('userSearch')?.value||'').toLowerCase();
-  const tbody = document.getElementById('usersTableBody');
-  const filtered = APP.users.filter(u =>
-    !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q)
-  );
-  tbody.innerHTML = filtered.map(user => `
-    <tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="avatar-sm">${initials(user.name)}</div>
-          <div>
-            <div style="font-weight:500;">${user.name}</div>
-            <div class="text-muted text-sm">@${user.username||'—'}</div>
-          </div>
-        </div>
-      </td>
-      <td class="text-sm">${user.email}</td>
-      <td>${sourceBadge(user.source)}</td>
-      <td class="text-mono text-sm text-muted">${Object.keys(user.idpSubs||{}).length ? Object.values(user.idpSubs)[0]?.slice(0,16)+'…' : '—'}</td>
-      <td class="text-sm text-muted">${fmtAgo(user.lastLogin)}</td>
-      <td>
-        <div style="display:flex;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="viewUserDetail('${user.id}')">View</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">✕</button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr><td colspan="6" class="text-muted text-sm" style="text-align:center;padding:20px;">No users found.</td></tr>`;
-}
-
-function renderSessions() {
-  const tbody = document.getElementById('sessionsTableBody');
-  tbody.innerHTML = APP.sessions.slice(0,20).map(s => {
-    const idp = APP.idps.find(i=>i.id===s.idpId);
-    const isActive = APP.currentSession?.id===s.id;
-    return `
-      <tr>
-        <td>
-          <div style="font-weight:500;">${s.userName}</div>
-          <div class="text-muted text-sm">${s.userEmail}</div>
-        </td>
-        <td>${idp ? `<span class="badge badge-blue">${idp.name}</span>` : `<span class="badge badge-gray">local</span>`}</td>
-        <td class="text-mono text-sm">${s.method}</td>
-        <td class="text-sm text-muted">${fmtAgo(s.startedAt)}</td>
-        <td>
-          ${s.tokens?.access_token ? '<span class="badge badge-green">AT</span> ' : ''}
-          ${s.tokens?.id_token ? '<span class="badge badge-blue">IT</span> ' : ''}
-          ${s.tokens?.refresh_token ? '<span class="badge badge-amber">RT</span>' : ''}
-        </td>
-        <td>${isActive ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Ended</span>'}</td>
-      </tr>`;
-  }).join('') || `<tr><td colspan="6" class="text-muted text-sm" style="text-align:center;padding:20px;">No sessions yet.</td></tr>`;
-}
-
-function renderAudit() {
-  const tbody = document.getElementById('auditTableBody');
-  const empty = document.getElementById('auditEmpty');
-  if(!APP.auditLog.length) { tbody.innerHTML=''; empty.style.display=''; return; }
-  empty.style.display='none';
-  tbody.innerHTML = APP.auditLog.map(a => {
-    const idp = APP.idps.find(i=>i.id===a.idpId);
-    return `
-      <tr>
-        <td class="text-mono text-sm text-muted">${fmtAgo(a.ts)}</td>
-        <td style="font-weight:500;">${a.event.replace(/_/g,' ')}</td>
-        <td class="text-sm">${a.userId ? (APP.users.find(u=>u.id===a.userId)?.name||a.userId) : '—'}</td>
-        <td>${idp ? `<span class="badge badge-blue">${idp.name}</span>` : '—'}</td>
-        <td><span class="badge ${a.status==='success'?'badge-green':a.status==='error'?'badge-red':a.status==='pending'?'badge-amber':'badge-gray'}">${a.status}</span></td>
-        <td class="text-sm text-muted">${a.detail||'—'}</td>
-      </tr>`;
-  }).join('');
-}
-
-function renderSessionTokens() {
-  const el = document.getElementById('sessionTokensList');
-  const tokens = APP.currentSession?.tokens || FLOW_STATE.tokens;
-  if(!tokens) { el.innerHTML='<div class="text-muted text-sm">Complete an OIDC flow to see tokens here.</div>'; return; }
-
-  const sections = [
-    { key: 'access_token', label: 'Access Token', badge: 'badge-green' },
-    { key: 'id_token', label: 'Identity Token (JWT)', badge: 'badge-blue' },
-    { key: 'refresh_token', label: 'Refresh Token', badge: 'badge-amber' }
-  ];
-
-  el.innerHTML = sections.filter(s=>tokens[s.key]).map(s => {
-    const decoded = parseJwt(tokens[s.key]);
-    return `
-      <div class="token-section">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span class="badge ${s.badge}">${s.label}</span>
-          ${decoded ? '<span class="text-muted text-sm">JWT decoded ↓</span>' : ''}
-          <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="
-            document.getElementById('tokenInput').value='${tokens[s.key]}';
-            decodeToken();nav('tokens');
-          ">Inspect</button>
-        </div>
-        <div class="token-value">${tokens[s.key].slice(0,120)}…</div>
-        ${decoded ? `
-          <div class="claims-grid" style="margin-top:8px;padding:10px;background:var(--surface2);border-radius:var(--radius);">
-            ${Object.entries(decoded.payload).slice(0,8).map(([k,v])=>
-              `<div class="claim-key">${k}</div><div class="claim-val">${typeof v==='object'?JSON.stringify(v):String(v)}</div>`
-            ).join('')}
-          </div>
-        ` : ''}
-      </div>
-      <hr>
-    `;
-  }).join('');
-
-  if(tokens.expires_in) {
-    el.innerHTML += `<div class="text-muted text-sm">Token expires in: ${tokens.expires_in}s · Token type: ${tokens.token_type||'Bearer'}</div>`;
-  }
-}
-
-function renderProfile() {
-  const card = document.getElementById('profileCard');
-  const tokCard = document.getElementById('profileTokens');
-  if(!APP.currentSession) {
-    card.innerHTML = '<div class="text-muted text-sm">Not signed in. <a href="#" onclick="showLoginPage();return false;" style="color:var(--accent2)">Sign in →</a></div>';
-    tokCard.style.display = 'none';
-    return;
-  }
-  const user = APP.users.find(u=>u.id===APP.currentSession.userId);
-  if(!user) return;
-  const idp = APP.idps.find(i=>i.id===APP.currentSession.idpId);
-  card.innerHTML = `
-    <div class="avatar-lg">${initials(user.name)}</div>
-    <div style="text-align:center;">
-      <div style="font-size:18px;font-weight:700;font-family:var(--display);">${user.name}</div>
-      <div class="text-muted" style="font-size:13px;">${user.email}</div>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-      ${sourceBadge(user.source)}
-      <span class="badge ${user.role==='admin'?'badge-purple':'badge-gray'}">${user.role}</span>
-      ${idp ? `<span class="badge badge-blue">${idp.name}</span>` : ''}
-    </div>
-    <div class="claims-grid" style="text-align:left;width:100%;">
-      <div class="claim-key">username</div><div class="claim-val">@${user.username||'—'}</div>
-      <div class="claim-key">last login</div><div class="claim-val">${fmtTime(user.lastLogin)}</div>
-      <div class="claim-key">total logins</div><div class="claim-val">${user.loginCount||0}</div>
-      <div class="claim-key">method</div><div class="claim-val text-mono">${APP.currentSession.method}</div>
-    </div>
-  `;
-
-  const tokens = APP.currentSession.tokens;
-  if(tokens) {
-    tokCard.style.display = '';
-    const body = document.getElementById('profileTokenBody');
-    body.innerHTML = Object.entries(tokens)
-      .filter(([k])=>['access_token','id_token','refresh_token','token_type','expires_in','scope'].includes(k))
-      .map(([k,v])=>`
-        <div class="token-section">
-          <div class="token-label">${k}</div>
-          <div class="token-value">${typeof v==='string'&&v.length>60?v.slice(0,60)+'…':v}</div>
-        </div>
-      `).join('');
-  } else {
-    tokCard.style.display = 'none';
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  TOKEN DECODER
-// ═══════════════════════════════════════════════════════
-function decodeToken() {
-  const raw = document.getElementById('tokenInput').value.trim();
-  const decoded = parseJwt(raw);
-  const card = document.getElementById('tokenDecoded');
-  if(!decoded) { card.style.display='none'; toast('Not a valid JWT.','error'); return; }
-  card.style.display = '';
-  renderClaimsGrid('tokenHeaderGrid', decoded.header);
-  renderClaimsGrid('tokenPayloadGrid', decoded.payload);
-  document.getElementById('tokenRaw').textContent = JSON.stringify(decoded.payload, null, 2);
-}
-function renderClaimsGrid(id, obj) {
-  document.getElementById(id).innerHTML = Object.entries(obj).map(([k,v]) => {
-    let display = typeof v==='object' ? JSON.stringify(v) : String(v);
-    // Format timestamps
-    if(['iat','exp','nbf','auth_time'].includes(k) && typeof v==='number') {
-      display = `${v} (${new Date(v*1000).toLocaleString()})`;
-    }
-    return `<div class="claim-key">${k}</div><div class="claim-val">${display}</div>`;
-  }).join('');
-}
-function tokenTab(name, btn) {
-  document.querySelectorAll('#tokenDecoded .tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('#tokenDecoded .tab-panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('token-'+name+'-panel').classList.add('active');
-}
-
-// ═══════════════════════════════════════════════════════
-//  SIDEBAR / BADGES
-// ═══════════════════════════════════════════════════════
-function updateSidebar() {
-  const sess = APP.currentSession;
-  document.getElementById('sidebarName').textContent = sess ? sess.userName : 'Not signed in';
-  document.getElementById('sidebarRole').textContent = sess ? sess.method : 'guest';
-  document.getElementById('sidebarAvatar').textContent = sess ? initials(sess.userName) : '?';
-  const dot = document.getElementById('sidebarStatus');
-  dot.style.background = sess ? 'var(--green)' : 'var(--muted)';
-  dot.style.boxShadow = sess ? '0 0 6px var(--green)' : 'none';
-  renderSidebarBadges();
-}
-function renderSidebarBadges() {
-  document.getElementById('idpCount').textContent = APP.idps.length;
-  document.getElementById('userCount').textContent = APP.users.length;
-  document.getElementById('auditCount').textContent = APP.auditLog.length;
-}
-
-// ═══════════════════════════════════════════════════════
-//  AUDIT LOG
-// ═══════════════════════════════════════════════════════
-function addAudit(event, userId, idpId, status, detail) {
-  APP.auditLog.unshift({ id: uid(), ts: new Date().toISOString(), event, userId, idpId, status, detail });
-  if(APP.auditLog.length > 200) APP.auditLog = APP.auditLog.slice(0,200);
-  saveState();
-  renderSidebarBadges();
-}
-
-// ═══════════════════════════════════════════════════════
-//  MODALS
-// ═══════════════════════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function openRegisterModal() {
-  ['regName','regUsername','regEmail','regPassword'].forEach(f=>{ document.getElementById(f).value=''; });
-  document.getElementById('regError').classList.add('hidden');
-  openModal('registerModal');
-}
-document.querySelectorAll('.modal-backdrop').forEach(m => {
-  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
-});
-
-// ═══════════════════════════════════════════════════════
-//  TOASTS
-// ═══════════════════════════════════════════════════════
-function toast(msg, type='info') {
-  const area = document.getElementById('toastArea');
-  const t = document.createElement('div');
-  const icons = { success:'✓', error:'✕', warn:'⚠', info:'ℹ' };
-  t.className = `toast ${type==='success'?'success':type==='error'?'error':''}`;
-  t.innerHTML = `<span>${icons[type]||'ℹ'}</span><span>${msg}</span>`;
-  area.appendChild(t);
-  setTimeout(()=>t.remove(), 3500);
-}
-
-// ═══════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════
-function sourceBadge(source) {
-  if(!source || source==='local') return '<span class="badge badge-gray">local</span>';
-  if(source.startsWith('idp:')) return `<span class="badge badge-blue">${source.slice(4)}</span>`;
-  return `<span class="badge badge-purple">${source}</span>`;
-}
-
-// ═══════════════════════════════════════════════════════
-//  URL CALLBACK HANDLER
-// ═══════════════════════════════════════════════════════
-function checkUrlCallback() {
-  const params = new URLSearchParams(window.location.search);
-  if(params.has('code') || params.has('error')) {
-    // Restore flow state from session storage
-    const saved = sessionStorage.getItem('oidcFlowState');
-    if(saved) {
-      try {
-        const fs = JSON.parse(saved);
-        FLOW_STATE = fs;
-        sessionStorage.removeItem('oidcFlowState');
-        showApp();
-        nav('oidcflow');
-        // Restore step display
-        setStep('state','done','State restored from session');
-        setStep('authorize','done','Authorization redirect completed');
-        document.getElementById('manualCodeCard').style.display = '';
-        handleCallback(params);
-        // Clean URL
-        window.history.replaceState({}, '', window.location.pathname);
-      } catch(e) {}
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════
-window.addEventListener('load', () => {
-  checkUrlCallback();
-  renderIdpButtons();
-  renderSidebarBadges();
-  updateSidebar();
-
-  // Show login if no session, else app
-  if(APP.currentSession) {
-    showApp();
-    nav('dashboard');
-  } else {
-    showLoginPage();
-  }
-});
-</script>
+<script src="app.js"></script>
 </body>
 </html>
