@@ -513,11 +513,24 @@ async function exchangeCode(code) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body:    body.toString()
     });
-    const data = await resp.json();
+
+    // Log full request and response detail for debugging
+    console.group('Token Exchange Debug');
+    console.log('Endpoint:', idp.tokenEndpoint);
+    console.log('Request body:', body.toString());
+    console.log('Response status:', resp.status);
+    console.log('Response headers:', [...resp.headers.entries()]);
+    const rawText = await resp.text();
+    console.log('Response body (raw):', rawText);
+    console.groupEnd();
+
+    let data;
+    try { data = JSON.parse(rawText); } catch(e) { data = { error: 'unparseable_response', error_description: rawText }; }
 
     if (!resp.ok || data.error) {
-      setStep('token', 'error', 'Error: ' + (data.error || resp.status) + ' — ' + (data.error_description || ''));
-      addAudit('TOKEN_EXCHANGE', null, idp.id, 'error', data.error || resp.status);
+      const detail = `${data.error || resp.status} — ${data.error_description || rawText.slice(0, 200)}`;
+      setStep('token', 'error', 'Error: ' + detail);
+      addAudit('TOKEN_EXCHANGE', null, idp.id, 'error', detail);
       return;
     }
 
