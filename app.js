@@ -452,16 +452,15 @@ async function startOidcFlow() {
   document.getElementById('flowRequestUrl').textContent    = authUrl;
   document.getElementById('manualCodeCard').style.display  = '';
 
-  setStep('callback', 'active', 'Waiting for redirect…');
-  addAudit('OIDC_FLOW_START', APP.currentSession?.userId || null, idpId, 'pending', 'Authorization request built');
+  setStep('callback', 'active', 'Redirecting to IDP — awaiting return…');
+  addAudit('OIDC_FLOW_START', APP.currentSession?.userId || null, idpId, 'pending', 'Authorization request built — redirecting');
 
-// Full-page redirect to the IDP authorization endpoint.
+  // Full-page redirect to the IDP authorization endpoint.
   // The IDP will redirect the browser back to redirectUri with ?code=&state=
   // checkUrlCallback() (called on page load) picks up the code on return.
   setTimeout(() => {
     window.location.href = authUrl;
   }, 300);
-}
 }
 
 async function handleCallback(params) {
@@ -1167,25 +1166,7 @@ function toast(msg, type = 'info') {
 //  so the init routine can skip showing the login page.
 // ═══════════════════════════════════════════════════════
 function checkUrlCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const hasCode  = params.has('code');
-  const hasError = params.has('error');
-
-  // Nothing to handle — not a redirect callback
-  if (!hasCode && !hasError) return false;
-
-  // Always clean the URL immediately so a refresh doesn't re-trigger
-  window.history.replaceState({}, '', window.location.pathname);
-
-  // Restore the flow state that was saved before the redirect
-  const saved = sessionStorage.getItem('oidcFlowState');
-// ═══════════════════════════════════════════════════════
-//  URL CALLBACK HANDLER
-//  Returns true if a callback was detected and handled,
-//  so the init routine can skip showing the login page.
-// ═══════════════════════════════════════════════════════
-function checkUrlCallback() {
-  const params = new URLSearchParams(window.location.search);
+  const params   = new URLSearchParams(window.location.search);
   const hasCode  = params.has('code');
   const hasError = params.has('error');
 
@@ -1251,42 +1232,6 @@ window.addEventListener('load', () => {
     return;
   }
 
-  renderIdpButtons();
-  renderSidebarBadges();
-  updateSidebar();
-
-  if (APP.currentSession) {
-    showApp();
-    nav('dashboard');
-  } else {
-    showLoginPage();
-  }
-});
-  } catch (e) {
-    console.error('Failed to restore OIDC flow state:', e);
-    showApp();
-    nav('oidcflow');
-    toast('Error restoring flow state: ' + e.message, 'error');
-  }
-
-  return true;
-}
-
-// ═══════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════
-window.addEventListener('load', () => {
-  // --- Callback detection must run FIRST and takes full control of routing ---
-  const wasCallback = checkUrlCallback();
-  if (wasCallback) {
-    // Sidebar and badges still need updating regardless
-    renderIdpButtons();
-    renderSidebarBadges();
-    updateSidebar();
-    return; // Do NOT fall through to login/dashboard routing
-  }
-
-  // --- Normal startup routing ---
   renderIdpButtons();
   renderSidebarBadges();
   updateSidebar();
