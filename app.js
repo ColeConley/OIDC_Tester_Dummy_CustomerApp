@@ -455,53 +455,13 @@ async function startOidcFlow() {
   setStep('callback', 'active', 'Waiting for redirect…');
   addAudit('OIDC_FLOW_START', APP.currentSession?.userId || null, idpId, 'pending', 'Authorization request built');
 
-  // Attempt popup
-  try {
-    const popup = window.open(authUrl, 'oidcLogin', 'width=600,height=700,scrollbars=yes');
-    if (!popup) throw new Error('blocked');
-
-    // Poll the popup for the redirect-back.
-    // While the user is on the IDP (cross-origin), popup.location throws SecurityError — expected.
-    // Once the IDP redirects back to our origin the error stops and we read the code.
-    let checkCount = 0;
-    const ownOrigin = window.location.origin;
-
-    const timer = setInterval(() => {
-      checkCount++;
-      if (checkCount > 600) {                              // 5-minute timeout
-        clearInterval(timer);
-        setStep('callback', 'error', 'Popup timed out after 5 minutes.');
-        return;
-      }
-
-      // User closed popup manually before redirect completed
-      if (popup.closed) {
-        clearInterval(timer);
-        toast('Popup closed. If the IDP redirected back, the code may already be processing. Otherwise paste it manually.', 'warn');
-        return;
-      }
-
-      try {
-        // Throws SecurityError while on IDP origin — just keep waiting.
-        const popupUrl = popup.location.href;
-
-        // Same origin — check for callback params
-        if (popupUrl && popupUrl.startsWith(ownOrigin)) {
-          const cbParams = new URL(popupUrl).searchParams;
-          if (cbParams.has('code') || cbParams.has('error')) {
-            clearInterval(timer);
-            popup.close();
-            handleCallback(cbParams);
-          }
-        }
-      } catch (e) {
-        // SecurityError is expected while popup is on the IDP. Ignore.
-      }
-    }, 500);
-
-  } catch (e) {
-    toast('Popup blocked. Copy the URL, open it manually, complete login, then paste the code above.', 'warn');
-  }
+// Full-page redirect to the IDP authorization endpoint.
+  // The IDP will redirect the browser back to redirectUri with ?code=&state=
+  // checkUrlCallback() (called on page load) picks up the code on return.
+  setTimeout(() => {
+    window.location.href = authUrl;
+  }, 300);
+}
 }
 
 async function handleCallback(params) {
@@ -1219,13 +1179,27 @@ function checkUrlCallback() {
 
   // Restore the flow state that was saved before the redirect
   const saved = sessionStorage.getItem('oidcFlowState');
+// ═══════════════════════════════════════════════════════
+//  URL CALLBACK HANDLER
+//  Returns true if a callback was detected and handled,
+//  so the init routine can skip showing the login page.
+// ═══════════════════════════════════════════════════════
+function checkUrlCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const hasCode  = params.has('code');
+  const hasError = params.has('error');
+
+  if (!hasCode && !hasError) return false;
+
+  // Clean the URL immediately so a refresh doesn't re-trigger
+  window.history.replaceState({}, '', window.location.pathname);
+
+  const saved = sessionStorage.getItem('oidcFlowState');
   if (!saved) {
-    // Flow state missing (e.g. opened in a new tab). Surface a helpful message.
     showApp();
     nav('oidcflow');
     toast('Received a callback but no pending flow state was found. Was the flow started in this tab?', 'warn');
     if (hasCode) {
-      // Let the user manually exchange the code anyway
       document.getElementById('manualCode').value = params.get('code');
       document.getElementById('manualCodeCard').style.display = '';
       setStep('callback', 'active', 'Flow state missing — enter code manually to continue');
@@ -1238,14 +1212,11 @@ function checkUrlCallback() {
     FLOW_STATE = fs;
     sessionStorage.removeItem('oidcFlowState');
 
-    // Show the flow tracer in its resumed state
     showApp();
     nav('oidcflow');
 
-    // Restore the IDP select so the page looks right
     const sel = document.getElementById('flowIdpSelect');
     if (sel) {
-      // populate options first (renderFlowPage may not have run yet)
       sel.innerHTML = APP.idps.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
       sel.value = fs.idpId;
     }
@@ -1256,9 +1227,41 @@ function checkUrlCallback() {
     document.getElementById('flowRequestCard').style.display = '';
     document.getElementById('flowRequestUrl').textContent    = '(redirect completed — see step results below)';
 
-    // Hand off to the normal callback handler
     handleCallback(params);
 
+  } catch (e) {
+    console.error('Failed to restore OIDC flow state:', e);
+    showApp();
+    nav('oidcflow');
+    toast('Error restoring flow state: ' + e.message, 'error');
+  }
+
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  const wasCallback = checkUrlCallback();
+  if (wasCallback) {
+    renderIdpButtons();
+    renderSidebarBadges();
+    updateSidebar();
+    return;
+  }
+
+  renderIdpButtons();
+  renderSidebarBadges();
+  updateSidebar();
+
+  if (APP.currentSession) {
+    showApp();
+    nav('dashboard');
+  } else {
+    showLoginPage();
+  }
+});
   } catch (e) {
     console.error('Failed to restore OIDC flow state:', e);
     showApp();
