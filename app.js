@@ -1,4 +1,3 @@
-// Author: Cole Conley
 /* ═══════════════════════════════════════════════════════
    OIDC Federation Tester — SP Portal
    app.js
@@ -461,22 +460,47 @@ async function startOidcFlow() {
     const popup = window.open(authUrl, 'oidcLogin', 'width=600,height=700,scrollbars=yes');
     if (!popup) throw new Error('blocked');
 
+    // Poll the popup for the redirect-back.
+    // While the user is on the IDP (cross-origin), popup.location throws SecurityError — expected.
+    // Once the IDP redirects back to our origin the error stops and we read the code.
     let checkCount = 0;
+    const ownOrigin = window.location.origin;
+
     const timer = setInterval(() => {
       checkCount++;
-      if (checkCount > 300) { clearInterval(timer); return; }
+      if (checkCount > 600) {                              // 5-minute timeout
+        clearInterval(timer);
+        setStep('callback', 'error', 'Popup timed out after 5 minutes.');
+        return;
+      }
+
+      // User closed popup manually before redirect completed
+      if (popup.closed) {
+        clearInterval(timer);
+        toast('Popup closed. If the IDP redirected back, the code may already be processing. Otherwise paste it manually.', 'warn');
+        return;
+      }
+
       try {
+        // Throws SecurityError while on IDP origin — just keep waiting.
         const popupUrl = popup.location.href;
-        if (popupUrl && popupUrl.includes('code=')) {
-          clearInterval(timer);
-          popup.close();
-          handleCallback(new URL(popupUrl).searchParams);
+
+        // Same origin — check for callback params
+        if (popupUrl && popupUrl.startsWith(ownOrigin)) {
+          const cbParams = new URL(popupUrl).searchParams;
+          if (cbParams.has('code') || cbParams.has('error')) {
+            clearInterval(timer);
+            popup.close();
+            handleCallback(cbParams);
+          }
         }
-        if (popup.closed && checkCount > 2) clearInterval(timer);
-      } catch (e) { /* cross-origin — still loading */ }
+      } catch (e) {
+        // SecurityError is expected while popup is on the IDP. Ignore.
+      }
     }, 500);
+
   } catch (e) {
-    toast('Popup blocked. Copy the URL, complete login, then paste the code.', 'warn');
+    toast('Popup blocked. Copy the URL, open it manually, complete login, then paste the code above.', 'warn');
   }
 }
 
@@ -1179,35 +1203,87 @@ function toast(msg, type = 'info') {
 
 // ═══════════════════════════════════════════════════════
 //  URL CALLBACK HANDLER
+//  Returns true if a callback was detected and handled,
+//  so the init routine can skip showing the login page.
 // ═══════════════════════════════════════════════════════
 function checkUrlCallback() {
   const params = new URLSearchParams(window.location.search);
-  if (!params.has('code') && !params.has('error')) return;
+  const hasCode  = params.has('code');
+  const hasError = params.has('error');
 
+  // Nothing to handle — not a redirect callback
+  if (!hasCode && !hasError) return false;
+
+  // Always clean the URL immediately so a refresh doesn't re-trigger
+  window.history.replaceState({}, '', window.location.pathname);
+
+  // Restore the flow state that was saved before the redirect
   const saved = sessionStorage.getItem('oidcFlowState');
-  if (!saved) return;
+  if (!saved) {
+    // Flow state missing (e.g. opened in a new tab). Surface a helpful message.
+    showApp();
+    nav('oidcflow');
+    toast('Received a callback but no pending flow state was found. Was the flow started in this tab?', 'warn');
+    if (hasCode) {
+      // Let the user manually exchange the code anyway
+      document.getElementById('manualCode').value = params.get('code');
+      document.getElementById('manualCodeCard').style.display = '';
+      setStep('callback', 'active', 'Flow state missing — enter code manually to continue');
+    }
+    return true;
+  }
 
   try {
     const fs = JSON.parse(saved);
     FLOW_STATE = fs;
     sessionStorage.removeItem('oidcFlowState');
+
+    // Show the flow tracer in its resumed state
     showApp();
     nav('oidcflow');
-    setStep('state',     'done', 'State restored from session');
-    setStep('authorize', 'done', 'Authorization redirect completed');
-    document.getElementById('manualCodeCard').style.display = '';
+
+    // Restore the IDP select so the page looks right
+    const sel = document.getElementById('flowIdpSelect');
+    if (sel) {
+      // populate options first (renderFlowPage may not have run yet)
+      sel.innerHTML = APP.idps.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+      sel.value = fs.idpId;
+    }
+
+    setStep('state',     'done', 'State & PKCE restored from session storage');
+    setStep('authorize', 'done', 'IDP redirect completed — code received');
+    document.getElementById('manualCodeCard').style.display  = '';
+    document.getElementById('flowRequestCard').style.display = '';
+    document.getElementById('flowRequestUrl').textContent    = '(redirect completed — see step results below)';
+
+    // Hand off to the normal callback handler
     handleCallback(params);
-    window.history.replaceState({}, '', window.location.pathname);
+
   } catch (e) {
     console.error('Failed to restore OIDC flow state:', e);
+    showApp();
+    nav('oidcflow');
+    toast('Error restoring flow state: ' + e.message, 'error');
   }
+
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  checkUrlCallback();
+  // --- Callback detection must run FIRST and takes full control of routing ---
+  const wasCallback = checkUrlCallback();
+  if (wasCallback) {
+    // Sidebar and badges still need updating regardless
+    renderIdpButtons();
+    renderSidebarBadges();
+    updateSidebar();
+    return; // Do NOT fall through to login/dashboard routing
+  }
+
+  // --- Normal startup routing ---
   renderIdpButtons();
   renderSidebarBadges();
   updateSidebar();
