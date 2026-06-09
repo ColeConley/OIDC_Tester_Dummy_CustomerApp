@@ -502,6 +502,9 @@ async function exchangeCode(code) {
   if (idp.clientSecret)       body.set('client_secret',  idp.clientSecret);
   if (FLOW_STATE.codeVerifier) body.set('code_verifier', FLOW_STATE.codeVerifier);
 
+  const encodedSecret   = encodeURIComponent(idp.clientSecret);
+  const basicAuthHeader = 'Basic ' + btoa(idp.clientId + ':' + encodedSecret);
+
   const tokenReqDetail =
     `POST ${idp.tokenEndpoint}\n  grant_type=authorization_code\n  code=${code.slice(0, 20)}…\n  ` +
     (FLOW_STATE.codeVerifier ? 'code_verifier=' + FLOW_STATE.codeVerifier.slice(0, 16) + '…' : '(no PKCE)');
@@ -510,7 +513,9 @@ async function exchangeCode(code) {
   try {
     const resp = await fetch(idp.tokenEndpoint, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': basicAuthHeader
+      },
       body:    body.toString()
     });
 
