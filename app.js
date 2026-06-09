@@ -499,7 +499,7 @@ async function exchangeCode(code) {
     redirect_uri: idp.redirectUri || window.location.href.split('?')[0],
     client_id:    idp.clientId
   });
-  if (idp.clientSecret)       body.set('client_secret',  idp.clientSecret);
+  //if (idp.clientSecret)       body.set('client_secret',  idp.clientSecret);
   if (FLOW_STATE.codeVerifier) body.set('code_verifier', FLOW_STATE.codeVerifier);
 
   const encodedSecret   = encodeURIComponent(idp.clientSecret);
