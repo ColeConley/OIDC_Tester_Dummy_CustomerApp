@@ -514,7 +514,10 @@ async function exchangeCode(code) {
     const resp = await fetch(idp.tokenEndpoint, {
       method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': basicAuthHeader
+        'Authorization': basicAuthHeader,
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Origin': 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp/'
       },
       body:    body.toString()
     });
