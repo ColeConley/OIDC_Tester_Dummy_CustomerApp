@@ -74,7 +74,7 @@ const ENVIRONMENTS = {
     userinfoEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/userinfo',
     clientId: 'oidc-tester',
     clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
-    redirectUri: 'https://dev.accounts-txt-customerapp.ad.portal.texas.gov/'
+    redirectUri: 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp'
   },
   test: ,
   stage: 
