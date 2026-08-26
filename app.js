@@ -68,32 +68,16 @@ let FLOW_STATE = {
 // ═══════════════════════════════════════════════════════
 const ENVIRONMENTS = {
   dev: {
-    name: 'DEV',
-    authEndpoint: 'https://dev.accounts-txt.ad.portal.texas.gov/txtsso/auth/v1/authorize',
-    tokenEndpoint: 'https://dev.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/access_token',
-    userinfoEndpoint: 'https://dev.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/userinfo',
-    clientId: 'txtsso-oidc-customerapp',
+    name: 'KEYCLOAK',
+    authEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/auth',
+    tokenEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/token',
+    userinfoEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/userinfo',
+    clientId: 'oidc-tester',
     clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
     redirectUri: 'https://dev.accounts-txt-customerapp.ad.portal.texas.gov/'
   },
-  test: {
-    name: 'TEST',
-    authEndpoint: 'https://test.accounts-txt.ad.portal.texas.gov/txtsso/auth/v1/authorize',
-    tokenEndpoint: 'https://test.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/access_token',
-    userinfoEndpoint: 'https://test.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/userinfo',
-    clientId: 'txtsso-oidc-customerapp',
-    clientSecret: 'a14XinJu68S7',
-    redirectUri: 'https://test.accounts-txt-customerapp.ad.portal.texas.gov/'
-  },
-  stage: {
-    name: 'STAGE',
-    authEndpoint: 'https://stage-account-txt.texas.gov/txtsso/auth/v1/authorize',
-    tokenEndpoint: 'https://stage.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/access_token',
-    userinfoEndpoint: 'https://stage.accounts-txt-customerapp.ad.portal.texas.gov/api/proxy/txtsso/iam/auth/v1/userinfo',
-    clientId: 'txtsso-oidc-customerapp',
-    clientSecret: "99IpntJZtZK7fuhrdwpEMFK71gV25GEY",
-    redirectUri: 'https://stage.accounts-txt-customerapp.ad.portal.texas.gov/'
-  }
+  test: ,
+  stage: 
 };
 
 function applyEnvironmentConfig(envKey) {
