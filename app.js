@@ -67,7 +67,7 @@ let FLOW_STATE = {
 //  ENVIRONMENT CONFIGURATIONS
 // ═══════════════════════════════════════════════════════
 const ENVIRONMENTS = {
-  dev: {
+  keycloak: {
     name: 'KEYCLOAK',
     authEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/auth',
     tokenEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/token',
@@ -76,10 +76,25 @@ const ENVIRONMENTS = {
     clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
     redirectUri: 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp'
   },
-  test: ,
-  stage: 
+  test: {
+    name: 'KEYCLOAK-TEST',
+    authEndpoint: '',
+    tokenEndpoint: '',
+    userinfoEndpoint: '',
+    clientId: '',
+    clientSecret: '',
+    redirectUri: ''
+  },
+  stage: {
+    name: 'KEYCLOAK-STAGE',
+    authEndpoint: '',
+    tokenEndpoint: '',
+    userinfoEndpoint: '',
+    clientId: '',
+    clientSecret: '',
+    redirectUri: ''
+  }
 };
-
 function applyEnvironmentConfig(envKey) {
   const env = ENVIRONMENTS[envKey];
   if (env) {
