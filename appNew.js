@@ -1,3 +1,4 @@
+// Author Cole Conley
 /* ═══════════════════════════════════════════════════════
    OIDC Federation Tester — SP Portal
    app.js
@@ -9,15 +10,24 @@
 const STORAGE_KEY = 'oidcSpTester_v2';
 
 let APP = loadState() || {
-  idps: [ 
+  idps: [
     {
-      name: 'KEYCLOAK',
-      authEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/auth',
-      tokenEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/token',
-      userinfoEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/userinfo',
-      clientId: 'oidc-tester',
-      clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
-      redirectUri: 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp'
+      id: 'TxT',
+      name: 'TxT',
+      color: '#3b82f6',
+      protocol: 'oidc',
+      issuer: '',
+      authEndpoint: '',
+      tokenEndpoint: '',
+      userinfoEndpoint: '',
+      jwksUri: '',
+      clientId: '',
+      clientSecret: '',
+      redirectUri: '',
+      scopes: 'openid profile',
+      matchField: 'email',
+      autoProvision: true,
+      createdAt: new Date().toISOString()
     }
   ],
   users: [
@@ -52,6 +62,50 @@ let FLOW_STATE = {
   userinfo: null,
   startedAt: null
 };
+
+// ═══════════════════════════════════════════════════════
+//  ENVIRONMENT CONFIGURATIONS
+// ═══════════════════════════════════════════════════════
+const ENVIRONMENTS = {
+  keycloak: {
+    name: 'KEYCLOAK',
+    authEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/auth',
+    tokenEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/token',
+    userinfoEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/userinfo',
+    clientId: 'oidc-tester',
+    clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
+    redirectUri: 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp'
+  },
+  test: {
+    name: 'KEYCLOAK-TEST',
+    authEndpoint: '',
+    tokenEndpoint: '',
+    userinfoEndpoint: '',
+    clientId: '',
+    clientSecret: '',
+    redirectUri: ''
+  },
+  stage: {
+    name: 'KEYCLOAK-STAGE',
+    authEndpoint: '',
+    tokenEndpoint: '',
+    userinfoEndpoint: '',
+    clientId: '',
+    clientSecret: '',
+    redirectUri: ''
+  }
+};
+function applyEnvironmentConfig(envKey) {
+  const env = ENVIRONMENTS[envKey];
+  if (env) {
+    document.getElementById('idpAuthEndpoint').value = env.authEndpoint;
+    document.getElementById('idpTokenEndpoint').value = env.tokenEndpoint;
+    document.getElementById('idpUserinfoEndpoint').value = env.userinfoEndpoint;
+    document.getElementById('idpClientId').value = env.clientId;
+    document.getElementById('idpClientSecret').value = env.clientSecret;
+    document.getElementById('idpRedirectUri').value = env.redirectUri;
+  }
+}
 
 function loadState() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; }
@@ -308,6 +362,7 @@ function viewUserDetail(id) {
 function openIdpModal(id) {
   document.getElementById('editIdpId').value    = id || '';
   document.getElementById('idpModalTitle').textContent = id ? 'Edit IDP' : 'Add Identity Provider';
+  document.getElementById('idpEnvironment').value = '';
 
   if (id) {
     const idp = APP.idps.find(i => i.id === id);
@@ -326,6 +381,14 @@ function openIdpModal(id) {
       document.getElementById('idpScopes').value         = idp.scopes         || 'openid profile email';
       document.getElementById('idpMatchField').value     = idp.matchField     || 'email';
       document.getElementById('idpAutoProvision').value  = String(idp.autoProvision !== false);
+      
+      // Detect which environment this IDP matches
+      for (const [envKey, env] of Object.entries(ENVIRONMENTS)) {
+        if (idp.authEndpoint === env.authEndpoint && idp.tokenEndpoint === env.tokenEndpoint && idp.redirectUri === env.redirectUri) {
+          document.getElementById('idpEnvironment').value = envKey;
+          break;
+        }
+      }
     }
   } else {
     document.getElementById('idpName').value           = '';
@@ -529,8 +592,7 @@ async function exchangeCode(code) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': basicAuthHeader,
         'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Origin': 'https://coleconley.github.io'
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
       },
       body:    body.toString()
     });
@@ -580,8 +642,8 @@ async function fetchUserInfo(idp, tokens) {
   setStep('userinfo', 'active', `GET ${idp.userinfoEndpoint}`);
 
   const requestHeaders = {
-        'Authorization': 'Bearer ' + tokens.access_token,
-        'Accept':        'application/json'
+    'Authorization': 'Bearer ' + tokens.access_token,
+    'Accept':        'application/json'
   };
 
   console.group('UserInfo Debug');
