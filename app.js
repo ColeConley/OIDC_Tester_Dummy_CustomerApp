@@ -16,7 +16,7 @@ let APP = loadState() || {
       tokenEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/token',
       userinfoEndpoint: 'https://auth.coleauth.com/realms/sso/protocol/openid-connect/userinfo',
       clientId: 'oidc-tester',
-      clientSecret: 'a!14$Xi^n|J*u\\6(8S-7',
+      clientSecret: 'bYEEWTBNHE99GcepQ5cu91xVUipHIapt',
       redirectUri: 'https://coleconley.github.io/OIDC_Tester_Dummy_CustomerApp'
     }
   ],
