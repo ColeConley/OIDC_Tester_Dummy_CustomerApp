@@ -528,9 +528,9 @@ async function exchangeCode(code) {
       method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': basicAuthHeader,
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Origin': 'https://coleconley.github.io'
+        //'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        //'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        //'Access-Control-Allow-Origin': 'https://coleconley.github.io'
       },
       body:    body.toString()
     });
