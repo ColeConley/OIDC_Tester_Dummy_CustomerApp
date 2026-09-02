@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OIDC Federation Tester — SP Portal</title>
+  <title>OIDC Tester — SP Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -18,7 +18,7 @@
   <div class="login-glow"></div>
   <div class="login-box fade-in">
     <div class="login-logo">SP Portal</div>
-    <div class="login-tagline">// OIDC Federation Tester v1.0</div>
+    <div class="login-tagline">// ColeAuth OIDC Tester</div>
 
     <div class="form-group">
       <label class="form-label">Email</label>
@@ -59,7 +59,7 @@
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">SP Portal</div>
-      <div class="logo-sub">OIDC Federation Tester</div>
+      <div class="logo-sub">ColeAuth OIDC Tester</div>
     </div>
 
     <div class="nav-section">
@@ -198,7 +198,7 @@
       <div class="page-body stack fade-in">
         <div class="alert alert-info">
           <span>ℹ</span>
-          <span>Configure your ForgeRock AM or any OIDC-compliant IDP. All redirect URIs must be registered
+          <span>Configure your OIDC-compliant IDP. All redirect URIs must be registered
             in the IDP client settings. Use <code style="font-family:var(--mono)">?callback=1</code> on this
             page's URL as the redirect URI.</span>
         </div>
@@ -515,7 +515,7 @@
     <input type="hidden" id="editIdpId">
     <div class="form-group">
       <label class="form-label">Display Name</label>
-      <input class="form-input" id="idpName" placeholder="ForgeRock AM - Dev">
+      <input class="form-input" id="idpName" placeholder="My IDP">
     </div>
     <div class="form-row">
       <div class="form-group mb-0">
@@ -534,7 +534,6 @@
     <div class="form-group">
       <label class="form-label">Issuer / Base URL</label>
       <input class="form-input" id="idpIssuer" placeholder="https://am.example.com/am/oauth2/realms/root">
-      <div class="form-hint">ForgeRock: https://&lt;host&gt;/am/oauth2/realms/&lt;realm&gt;</div>
     </div>
     <div class="form-group">
       <label class="form-label">Authorization Endpoint</label>
